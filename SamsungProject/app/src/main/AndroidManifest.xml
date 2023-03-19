@@ -11,6 +11,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SamsungProject"
         tools:targetApi="31">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDSBlvB4U_o3jU-qLLFmnIOF4452RuHjys"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">
