@@ -7,17 +7,17 @@
 
     <fragment
         android:id="@+id/mapFragment"
-        android:name="com.samsung.samsungProject.fragment.MapFragment"
+        android:name="com.samsung.samsungproject.fragment.MapFragment"
         android:label="fragment_map"
         tools:layout="@layout/fragment_map" />
      <fragment
          android:id="@+id/profileFragment"
-         android:name="com.samsung.samsungProject.fragment.ProfileFragment"
+         android:name="com.samsung.samsungproject.fragment.ProfileFragment"
          android:label="fragment_profile"
          tools:layout="@layout/fragment_profile" />
     <fragment
         android:id="@+id/leaderboardFragment"
-        android:name="com.samsung.samsungProject.fragment.LeaderboardFragment"
+        android:name="com.samsung.samsungproject.fragment.LeaderboardFragment"
         android:label="fragment_leaderboard"
         tools:layout="@layout/fragment_leaderboard" />
 </navigation>

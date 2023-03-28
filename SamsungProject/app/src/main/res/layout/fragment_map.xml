@@ -4,5 +4,5 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     android:name="com.google.android.gms.maps.SupportMapFragment"
-    tools:context="com.samsung.samsungProject.fragment.MapFragment">
+    tools:context="com.samsung.samsungproject.fragment.MapFragment">
 </fragment>

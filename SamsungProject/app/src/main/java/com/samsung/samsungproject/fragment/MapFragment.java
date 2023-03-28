@@ -1,4 +1,4 @@
-package com.samsung.samsungProject.fragment;
+package com.samsung.samsungproject.fragment;
 
 import android.os.Bundle;
 
@@ -8,7 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.samsung.samsungProject.R;
+import com.samsung.samsungproject.R;
 
 /**
  * A simple {@link Fragment} subclass.

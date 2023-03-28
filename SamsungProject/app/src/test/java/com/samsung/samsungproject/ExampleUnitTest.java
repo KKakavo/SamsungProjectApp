@@ -1,4 +1,4 @@
-package com.samsung.samsungProject;
+package com.samsung.samsungproject;
 
 import org.junit.Test;
 

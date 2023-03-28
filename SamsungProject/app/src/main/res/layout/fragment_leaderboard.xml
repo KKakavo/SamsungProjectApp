@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context="com.samsung.samsungProject.fragment.LeaderboardFragment">
+    tools:context="com.samsung.samsungproject.fragment.LeaderboardFragment">
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
