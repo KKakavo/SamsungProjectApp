@@ -15,7 +15,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -28,8 +32,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private GoogleMap googleMap;
 
-    private Boolean isLocationPermissionGranted;
+    private FusedLocationProviderClient fusedLocationProviderClient;
 
+    private Location lastLocation;
+    private Boolean isLocationPermissionGranted;
     private final String LOG_TAG = "TAG";
 
     private final int LOCATION_PERMISSION_REQUEST = 1;
@@ -44,8 +50,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_map, container, false);
 
-        SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.fr_google_map);
+        SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager()
+                .findFragmentById(R.id.fr_google_map);
         supportMapFragment.getMapAsync(this);
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+
         return view;
     }
 
@@ -55,6 +65,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         this.googleMap = googleMap;
         checkLocationPermisson();
         updateLocationUI();
+        getLastLocation();
+        Location location = googleMap.getMyLocation();
+
+        //Toast.makeText(getContext(), location.getLongitude() + " " + location.getAltitude(), Toast.LENGTH_LONG).show();
     }
 
     private void checkLocationPermisson() {
@@ -101,5 +115,23 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             Log.e(LOG_TAG, e.getMessage());
         }
     }
+
+    private void getLastLocation() {
+        try {
+            if (isLocationPermissionGranted) {
+                Task<Location> locationTask = fusedLocationProviderClient.getLastLocation();
+                locationTask.addOnCompleteListener(requireActivity(), task -> {
+                    if (task.isSuccessful()) {
+                        lastLocation = task.getResult();
+                        if (lastLocation != null)
+                            Toast.makeText(getContext(), lastLocation.getLongitude() + " " + lastLocation.getLatitude(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        } catch (SecurityException e){
+            Log.e(LOG_TAG, e.getMessage());
+        }
+    }
+
 
 }
