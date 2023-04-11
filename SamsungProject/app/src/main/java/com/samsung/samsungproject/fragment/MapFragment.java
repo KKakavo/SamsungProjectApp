@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.Task;
 import com.samsung.samsungproject.R;
@@ -43,6 +44,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_map, container, false);
 
+        SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.fr_google_map);
+        supportMapFragment.getMapAsync(this);
         return view;
     }
 
@@ -57,6 +60,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private void checkLocationPermisson() {
 
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED)
             isLocationPermissionGranted = true;
         else
