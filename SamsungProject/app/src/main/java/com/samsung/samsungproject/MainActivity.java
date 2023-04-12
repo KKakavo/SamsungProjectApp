@@ -11,6 +11,7 @@ import androidx.navigation.ui.NavigationUI;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
@@ -28,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         bottomNavigationView = findViewById(R.id.ma_bottom_navigation);
         navController = Navigation.findNavController(this, R.id.ma_navigation_host);
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
