@@ -18,10 +18,12 @@ import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,11 +33,16 @@ import android.widget.Toast;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.Granularity;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.Priority;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -56,25 +63,44 @@ import java.util.List;
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private GoogleMap googleMap;
+    private AppCompatButton btListenLocation;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private LocationManager locationManager;
-    private LocationListener locationListener;
-    private Location lastLocation;
-    private Polyline polyline;
     private List<LatLng> polylinePoints;
     private final String LOG_TAG = "TAG";
-    private final int LOCATION_PERMISSION_REQUEST = 1;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!isLocationPermissionGranted()) {
+        if (!isLocationPermissionGranted())
             launchLocationPermissionRequest();
-        }
-
+        enableLocationSettings();
         polylinePoints = new ArrayList<>();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
-        locationManager = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
+        LocationRequest locationRequest = new LocationRequest
+                .Builder(Priority.PRIORITY_HIGH_ACCURACY, 500)
+                .setGranularity(Granularity.GRANULARITY_FINE)
+                .setWaitForAccurateLocation(true)
+                .build();
+        LocationCallback locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                for(Location location : locationResult.getLocations()) {
+                    polylinePoints.add(new LatLng(location.getLatitude(), location.getLongitude()));
+
+                }
+
+                googleMap.addPolyline(new PolylineOptions()
+                        .addAll(polylinePoints)
+                        .width(20)
+                        .color(Color.RED));
+            }
+        };
+        try {
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+        } catch (SecurityException e){
+            Log.e(LOG_TAG, e.getMessage());
+        }
     }
 
     @Override
@@ -85,6 +111,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 .findFragmentById(R.id.fr_google_map);
         supportMapFragment.getMapAsync(this);
 
+        btListenLocation = view.findViewById(R.id.bt_listen);
+        btListenLocation.setOnClickListener(v -> {
+
+
+        });
         return view;
     }
 
@@ -105,6 +136,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                     else
                         shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION);
                 }).launch(Manifest.permission.ACCESS_FINE_LOCATION);
+
     }
 
     private boolean isLocationPermissionGranted() {
@@ -163,5 +195,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     }
 
+    private boolean isPolylineCrossing(){
+        LatLng firstPoint = polylinePoints.get(polylinePoints.size() - 2);
+        LatLng secondPoint = polylinePoints.get(polylinePoints.size() - 1);
+        
+        return false;
+    }
 
 }

@@ -7,6 +7,8 @@ android {
     namespace 'com.samsung.samsungproject'
     compileSdk 33
 
+
+
     defaultConfig {
         applicationId "com.samsung.samsungproject"
         minSdk 25
