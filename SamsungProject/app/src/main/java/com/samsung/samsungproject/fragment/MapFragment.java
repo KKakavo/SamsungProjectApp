@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.internal.maps.zzag;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.Granularity;
 import com.google.android.gms.location.LocationAvailability;
@@ -51,6 +52,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -58,15 +61,19 @@ import com.google.android.gms.tasks.Task;
 import com.samsung.samsungproject.R;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private GoogleMap googleMap;
-    private AppCompatButton btListenLocation;
+    private AppCompatButton btClear;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private List<LatLng> polylinePoints;
+    private List<PolygonOptions> polygonList;
+    private LinkedList<LatLng> polylinePoints;
     private final String LOG_TAG = "TAG";
+
+    Polyline polyline;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -74,7 +81,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         if (!isLocationPermissionGranted())
             launchLocationPermissionRequest();
         enableLocationSettings();
-        polylinePoints = new ArrayList<>();
+        polylinePoints = new LinkedList<>();
+        polygonList = new ArrayList<>();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         LocationRequest locationRequest = new LocationRequest
                 .Builder(Priority.PRIORITY_HIGH_ACCURACY, 500)
@@ -85,20 +93,37 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
-                for(Location location : locationResult.getLocations()) {
+                for (Location location : locationResult.getLocations()) {
+                    if (polylinePoints.size() >= 2) {
+                        LatLng[] points = PolylineSelfCrossingPoint(new LatLng(location.getLatitude(), location.getLongitude()));
+                        if (points != null) {
+                            Log.d(LOG_TAG, location.getLatitude() + " " + location.getLongitude()
+                                    + "\n" + points[1].latitude + " " + points[1].longitude);
+                            List<LatLng> polygonPoints = new LinkedList<>
+                                    (polylinePoints.subList(polylinePoints.indexOf(points[0]) + 1, polylinePoints.size() - 1));
+                            polylinePoints = new LinkedList<>(polylinePoints.subList(0, polylinePoints.indexOf(points[0])));
+                            polygonList.add(new PolygonOptions()
+                                    .addAll(polygonPoints)
+                                    .strokeWidth(20)
+                                    .strokeColor(Color.YELLOW)
+                                    .fillColor(Color.YELLOW));
+                            Polygon polygon = googleMap.addPolygon(polygonList.get(polygonList.size() - 1));
+                            polylinePoints.add(points[1]);
+                        }
+                    }
                     polylinePoints.add(new LatLng(location.getLatitude(), location.getLongitude()));
-
                 }
-
-                googleMap.addPolyline(new PolylineOptions()
+                polyline.remove();
+                polyline = googleMap.addPolyline(new PolylineOptions()
                         .addAll(polylinePoints)
                         .width(20)
                         .color(Color.RED));
+
             }
         };
         try {
             fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-        } catch (SecurityException e){
+        } catch (SecurityException e) {
             Log.e(LOG_TAG, e.getMessage());
         }
     }
@@ -111,10 +136,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 .findFragmentById(R.id.fr_google_map);
         supportMapFragment.getMapAsync(this);
 
-        btListenLocation = view.findViewById(R.id.bt_listen);
-        btListenLocation.setOnClickListener(v -> {
-
-
+        btClear = view.findViewById(R.id.bt_listen);
+        btClear.setOnClickListener(v -> {
+            polyline.remove();
+            polylinePoints.clear();
+            polyline.setPoints(polylinePoints);
         });
         return view;
     }
@@ -123,8 +149,17 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
-        if(isLocationPermissionGranted())
+        if (isLocationPermissionGranted())
             enableMyLocation();
+        polyline = googleMap.addPolyline(new PolylineOptions().width(0));
+/*        Polygon polygon1 = googleMap.addPolygon(new PolygonOptions().fillColor(Color.GREEN)
+                .add(new LatLng(0, 0), new LatLng(1, 0),
+                        new LatLng(1,1), new LatLng(0,1),
+                        new LatLng(0.5, 0.5)));
+        Polygon polygon2 = googleMap.addPolygon(new PolygonOptions().fillColor(Color.GREEN)
+                .add(new LatLng(0, 0), new LatLng(-0.5, 0.5),
+                        new LatLng(0,1) ));*/
+
     }
 
 
@@ -195,11 +230,34 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     }
 
-    private boolean isPolylineCrossing(){
-        LatLng firstPoint = polylinePoints.get(polylinePoints.size() - 2);
-        LatLng secondPoint = polylinePoints.get(polylinePoints.size() - 1);
-        
-        return false;
+    private LatLng[] PolylineSelfCrossingPoint(LatLng newLocationPoint) {
+        LatLng AEndPoint = newLocationPoint;
+        LatLng AStartPoint = polylinePoints.peekLast();
+        double v = AEndPoint.latitude - AStartPoint.latitude;
+        double w = AEndPoint.longitude - AStartPoint.longitude;
+        LatLng BStartPoint = null;
+        LatLng BEndPoint = null;
+        for (LatLng point : polylinePoints) {
+            BStartPoint = BEndPoint;
+            BEndPoint = point;
+            if (BStartPoint != null && BEndPoint != AStartPoint){
+                double v2 = BEndPoint.latitude - BStartPoint.latitude;
+                double w2 = BEndPoint.longitude - BStartPoint.longitude;
+                double lenA = Math.sqrt(v * v + w * w);
+                double lenB = Math.sqrt(v2 * v2 + w2 * w2);
+                double diff = 0.000001;
+                if(Math.abs(v/lenA - v2/lenB) < diff
+                        && Math.abs(w/lenA - w2/lenB) < diff)
+                    continue;
+                double t2 = (-w * BStartPoint.latitude + w * AStartPoint.latitude + v * BStartPoint.longitude - v * AStartPoint.longitude) / (w * v2 - v * w2);
+                double t = (BStartPoint.latitude - AStartPoint.latitude + v2 * t2) / v;
+                if(t > 0 && t < 1 && t2 > 0 && t2 < 1){
+                    Log.d(LOG_TAG, "Пересечение найдено");
+                    return new LatLng[]{BStartPoint, new LatLng(BStartPoint.latitude + v2 * t2, BStartPoint.longitude + w2 * t2)};
+                }
+            }
+        }
+        Log.d(LOG_TAG, "Пересечение не найдено");
+        return null;
     }
-
 }
