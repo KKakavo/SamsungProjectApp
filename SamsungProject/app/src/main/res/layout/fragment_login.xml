@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".feature.login.ui.LoginFragment">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/log_gl"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.3"/>
+    <EditText
+        android:id="@+id/log_et_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/log_gl"
+        app:layout_constraintStart_toStartOf="parent"
+        android:hint="email"/>
+    <EditText
+        android:id="@+id/log_et_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/log_et_email"
+        android:hint="password"
+        android:inputType="textPassword"/>
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/log_acb_submit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/log_et_password"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:text="submit"/>
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/log_acb_register"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/log_acb_submit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:text="register"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

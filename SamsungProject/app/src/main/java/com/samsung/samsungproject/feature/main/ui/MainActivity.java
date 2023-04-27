@@ -1,4 +1,4 @@
-package com.samsung.samsungproject;
+package com.samsung.samsungproject.feature.main.ui;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,20 +20,12 @@ import com.samsung.samsungproject.R;
 
 public class MainActivity extends AppCompatActivity {
 
-    BottomNavigationView bottomNavigationView;
-    NavController navController;
 
-    private int LOCATION_PERMISSION_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        bottomNavigationView = findViewById(R.id.ma_bottom_navigation);
-        navController = Navigation.findNavController(this, R.id.ma_navigation_host);
-        NavigationUI.setupWithNavController(bottomNavigationView, navController);
-        
-
     }
 
 }

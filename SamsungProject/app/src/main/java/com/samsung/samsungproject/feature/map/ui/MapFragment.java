@@ -1,4 +1,4 @@
-package com.samsung.samsungproject.fragment;
+package com.samsung.samsungproject.feature.map.ui;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -59,6 +59,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.samsung.samsungproject.R;
+import com.samsung.samsungproject.databinding.FragmentMapBinding;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -66,8 +67,8 @@ import java.util.List;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
+    private FragmentMapBinding binding;
     private GoogleMap googleMap;
-    private AppCompatButton btClear;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private List<PolygonOptions> polygonList;
     private LinkedList<LatLng> polylinePoints;
@@ -80,7 +81,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         super.onCreate(savedInstanceState);
         if (!isLocationPermissionGranted())
             launchLocationPermissionRequest();
-        enableLocationSettings();
+        //enableLocationSettings();
         polylinePoints = new LinkedList<>();
         polygonList = new ArrayList<>();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
@@ -131,20 +132,24 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_map, container, false);
+        binding = FragmentMapBinding.inflate(inflater);
         SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.fr_google_map);
         supportMapFragment.getMapAsync(this);
 
-        btClear = view.findViewById(R.id.bt_listen);
-        btClear.setOnClickListener(v -> {
+        binding.btClear.setOnClickListener(v -> {
             polyline.remove();
             polylinePoints.clear();
             polyline.setPoints(polylinePoints);
         });
-        return view;
+        return binding.getRoot();
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        binding = null;
+    }
 
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
@@ -193,7 +198,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
-    private void enableLocationSettings() {
+   /* private void enableLocationSettings() {
         LocationRequest locationRequest = LocationRequest.create()
                 .setInterval(5000)
                 .setFastestInterval(2000)
@@ -228,7 +233,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             }
         });
 
-    }
+    }*/
 
     private LatLng[] PolylineSelfCrossingPoint(LatLng newLocationPoint) {
         LatLng AEndPoint = newLocationPoint;
@@ -252,12 +257,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 double t2 = (-w * BStartPoint.latitude + w * AStartPoint.latitude + v * BStartPoint.longitude - v * AStartPoint.longitude) / (w * v2 - v * w2);
                 double t = (BStartPoint.latitude - AStartPoint.latitude + v2 * t2) / v;
                 if(t > 0 && t < 1 && t2 > 0 && t2 < 1){
-                    Log.d(LOG_TAG, "Пересечение найдено");
                     return new LatLng[]{BStartPoint, new LatLng(BStartPoint.latitude + v2 * t2, BStartPoint.longitude + w2 * t2)};
                 }
             }
         }
-        Log.d(LOG_TAG, "Пересечение не найдено");
         return null;
     }
 }
