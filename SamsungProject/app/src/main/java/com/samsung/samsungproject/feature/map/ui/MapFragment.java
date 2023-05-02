@@ -1,65 +1,50 @@
 package com.samsung.samsungproject.feature.map.ui;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Camera;
 import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.AppCompatButton;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
-
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.internal.maps.zzag;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.Granularity;
-import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.Priority;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.StreetViewPanorama;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.JointType;
+import com.google.android.gms.maps.internal.ICameraUpdateFactoryDelegate;
+import com.google.android.gms.maps.internal.IStreetViewPanoramaDelegate;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.gms.maps.model.RoundCap;
+import com.google.maps.android.PolyUtil;
+import com.google.maps.android.SphericalUtil;
 import com.samsung.samsungproject.R;
 import com.samsung.samsungproject.databinding.FragmentMapBinding;
+import com.samsung.samsungproject.feature.map.presentation.MapViewModel;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -68,10 +53,12 @@ import java.util.List;
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private FragmentMapBinding binding;
+    private MapViewModel viewModel;
     private GoogleMap googleMap;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private List<PolygonOptions> polygonList;
     private LinkedList<LatLng> polylinePoints;
+    private LatLng currentLocation;
     private final String LOG_TAG = "TAG";
 
     Polyline polyline;
@@ -82,6 +69,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         if (!isLocationPermissionGranted())
             launchLocationPermissionRequest();
         //enableLocationSettings();
+        viewModel = new ViewModelProvider(this).get(MapViewModel.class);
         polylinePoints = new LinkedList<>();
         polygonList = new ArrayList<>();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
@@ -98,10 +86,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                     if (polylinePoints.size() >= 2) {
                         LatLng[] points = PolylineSelfCrossingPoint(new LatLng(location.getLatitude(), location.getLongitude()));
                         if (points != null) {
-                            Log.d(LOG_TAG, location.getLatitude() + " " + location.getLongitude()
-                                    + "\n" + points[1].latitude + " " + points[1].longitude);
                             List<LatLng> polygonPoints = new LinkedList<>
                                     (polylinePoints.subList(polylinePoints.indexOf(points[0]) + 1, polylinePoints.size() - 1));
+                            Log.d(LOG_TAG, location.getLatitude() + " " + location.getLongitude()
+                                    + "\n" + points[1].latitude + " " + points[1].longitude
+                                    + "\n" + SphericalUtil.computeArea(polygonPoints));
                             polylinePoints = new LinkedList<>(polylinePoints.subList(0, polylinePoints.indexOf(points[0])));
                             polygonList.add(new PolygonOptions()
                                     .addAll(polygonPoints)
@@ -118,7 +107,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 polyline = googleMap.addPolyline(new PolylineOptions()
                         .addAll(polylinePoints)
                         .width(20)
-                        .color(Color.RED));
+                        .color(Color.RED)
+                        .startCap(new RoundCap())
+                        .endCap(new RoundCap()));
 
             }
         };
@@ -136,7 +127,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.fr_google_map);
         supportMapFragment.getMapAsync(this);
-
         binding.btClear.setOnClickListener(v -> {
             polyline.remove();
             polylinePoints.clear();
@@ -157,13 +147,22 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         if (isLocationPermissionGranted())
             enableMyLocation();
         polyline = googleMap.addPolyline(new PolylineOptions().width(0));
-/*        Polygon polygon1 = googleMap.addPolygon(new PolygonOptions().fillColor(Color.GREEN)
+
+        //googleMap.setBuildingsEnabled(false);
+        googleMap.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(
+                        requireContext(), R.raw.style_json));
+
+        googleMap.setTrafficEnabled(false);
+        //googleMap.moveCamera(new ICameraUpdateFactoryDelegate().newCameraPosition());
+        Polygon polygon1 = googleMap.addPolygon(new PolygonOptions().fillColor(Color.GREEN)
                 .add(new LatLng(0, 0), new LatLng(1, 0),
                         new LatLng(1,1), new LatLng(0,1),
                         new LatLng(0.5, 0.5)));
         Polygon polygon2 = googleMap.addPolygon(new PolygonOptions().fillColor(Color.GREEN)
                 .add(new LatLng(0, 0), new LatLng(-0.5, 0.5),
-                        new LatLng(0,1) ));*/
+                        new LatLng(0,1) ));
+
 
     }
 
@@ -176,7 +175,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                     else
                         shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION);
                 }).launch(Manifest.permission.ACCESS_FINE_LOCATION);
-
     }
 
     private boolean isLocationPermissionGranted() {

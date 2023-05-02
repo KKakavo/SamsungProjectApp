@@ -22,10 +22,10 @@ import retrofit2.Response;
 public class RegistrationFragment extends Fragment {
 
     private FragmentRegistrationBinding binding;
+
     public RegistrationFragment() {
         // Required empty public constructor
     }
-
 
 
     @Override
@@ -44,14 +44,14 @@ public class RegistrationFragment extends Fragment {
                     "user")).enqueue(new Callback<User>() {
                 @Override
                 public void onResponse(Call<User> call, Response<User> response) {
-                    Toast.makeText(requireContext(), "Success", Toast.LENGTH_LONG).show();
-                    Navigation.findNavController(binding.getRoot())
-                            .navigate(RegistrationFragmentDirections.actionRegistrationFragmentToMapFragment());
+                    if (response.isSuccessful())
+                        Navigation.findNavController(binding.getRoot())
+                                .navigate(RegistrationFragmentDirections.actionRegistrationFragmentToMapFragment());
                 }
 
                 @Override
                 public void onFailure(Call<User> call, Throwable t) {
-                    Toast.makeText(requireContext(), "failure", Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireContext(), "fail", Toast.LENGTH_LONG).show();
                 }
             });
         });

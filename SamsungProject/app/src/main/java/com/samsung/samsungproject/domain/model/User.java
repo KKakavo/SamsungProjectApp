@@ -13,6 +13,7 @@ public class User {
         this.role = role;
     }
 
+
     public String getEmail() {
         return email;
     }
