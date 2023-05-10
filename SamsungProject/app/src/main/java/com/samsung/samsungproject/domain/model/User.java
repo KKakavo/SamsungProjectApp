@@ -1,10 +1,22 @@
 package com.samsung.samsungproject.domain.model;
 
+import java.util.List;
+
 public class User {
-    private final String email;
-    private final String nickname;
-    private final String password;
-    private final String role;
+
+    private long id;
+    private String email;
+    private String nickname;
+    private String password;
+    private String role;
+
+    public User(long id, String email, String nickname, String password, String role) {
+        this.id = id;
+        this.email = email;
+        this.nickname = nickname;
+        this.password = password;
+        this.role = role;
+    }
 
     public User(String email, String nickname, String password, String role) {
         this.email = email;
@@ -13,7 +25,9 @@ public class User {
         this.role = role;
     }
 
-
+    public long getId() {
+        return id;
+    }
     public String getEmail() {
         return email;
     }

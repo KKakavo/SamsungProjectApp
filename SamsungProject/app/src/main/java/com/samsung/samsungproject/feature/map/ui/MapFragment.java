@@ -1,10 +1,18 @@
 package com.samsung.samsungproject.feature.map.ui;
 
+
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Camera;
 import android.graphics.Color;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -12,27 +20,35 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.Granularity;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.Priority;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.StreetViewPanorama;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.internal.ICameraUpdateFactoryDelegate;
-import com.google.android.gms.maps.internal.IStreetViewPanoramaDelegate;
-import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Polygon;
@@ -40,15 +56,26 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
+import com.google.android.gms.tasks.Task;
 import com.google.maps.android.PolyUtil;
 import com.google.maps.android.SphericalUtil;
 import com.samsung.samsungproject.R;
+import com.samsung.samsungproject.data.repository.ShapeRepository;
 import com.samsung.samsungproject.databinding.FragmentMapBinding;
+import com.samsung.samsungproject.domain.model.Point;
+import com.samsung.samsungproject.domain.model.Shape;
+import com.samsung.samsungproject.domain.model.User;
+import com.samsung.samsungproject.feature.map.presentation.MapHelper;
 import com.samsung.samsungproject.feature.map.presentation.MapViewModel;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
@@ -56,10 +83,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private MapViewModel viewModel;
     private GoogleMap googleMap;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private List<PolygonOptions> polygonList;
-    private LinkedList<LatLng> polylinePoints;
-    private LatLng currentLocation;
+    private List<LatLng> polylinePoints;
+    List<Polygon> polygonList;
     private final String LOG_TAG = "TAG";
+    private LatLng currentLocation;
+    private boolean isPaintingActive = false;
+    private boolean isCameraMoving = false;
+    private SharedPreferences sharedPreferences;
+    private User authorizedUser;
+    private final static String NICKNAME_KEY = "NICKNAME_KEY";
+    private final static String EMAIL_KEY = "EMAIL_KEY";
+    private final static String PASSWORD_KEY = "PASSWORD_KEY";
+    private final static String ID_KEY = "ID_KEY";
+    private final static String ROLE_KEY = "ROLE_KEY";
 
     Polyline polyline;
 
@@ -68,9 +104,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         super.onCreate(savedInstanceState);
         if (!isLocationPermissionGranted())
             launchLocationPermissionRequest();
-        //enableLocationSettings();
+        sharedPreferences = requireActivity().getPreferences(Context.MODE_PRIVATE);
+        authorizedUser = new User(sharedPreferences.getLong(ID_KEY, 0),
+                sharedPreferences.getString(EMAIL_KEY, null),
+                sharedPreferences.getString(NICKNAME_KEY, null),
+                sharedPreferences.getString(PASSWORD_KEY, null),
+                sharedPreferences.getString(ROLE_KEY, null));
         viewModel = new ViewModelProvider(this).get(MapViewModel.class);
-        polylinePoints = new LinkedList<>();
+        polylinePoints = new ArrayList<>();
         polygonList = new ArrayList<>();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         LocationRequest locationRequest = new LocationRequest
@@ -83,35 +124,43 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
                 for (Location location : locationResult.getLocations()) {
-                    if (polylinePoints.size() >= 2) {
-                        LatLng[] points = PolylineSelfCrossingPoint(new LatLng(location.getLatitude(), location.getLongitude()));
-                        if (points != null) {
-                            List<LatLng> polygonPoints = new LinkedList<>
-                                    (polylinePoints.subList(polylinePoints.indexOf(points[0]) + 1, polylinePoints.size() - 1));
-                            Log.d(LOG_TAG, location.getLatitude() + " " + location.getLongitude()
-                                    + "\n" + points[1].latitude + " " + points[1].longitude
-                                    + "\n" + SphericalUtil.computeArea(polygonPoints));
-                            polylinePoints = new LinkedList<>(polylinePoints.subList(0, polylinePoints.indexOf(points[0])));
-                            polygonList.add(new PolygonOptions()
-                                    .addAll(polygonPoints)
-                                    .strokeWidth(20)
-                                    .strokeColor(Color.YELLOW)
-                                    .fillColor(Color.YELLOW));
-                            Polygon polygon = googleMap.addPolygon(polygonList.get(polygonList.size() - 1));
-                            polylinePoints.add(points[1]);
+                    LatLng newPoint = new LatLng(location.getLatitude(), location.getLongitude());
+                    currentLocation = newPoint;
+                    if (isPaintingActive) {
+                        if (polylinePoints.size() >= 2) {
+                            for (int i = 0; i < polylinePoints.size() - 2; i++) {
+                                LatLng crossingPoint = MapHelper.crossingPoint(polylinePoints.get(polylinePoints.size() - 1), newPoint,
+                                        polylinePoints.get(i), polylinePoints.get(i + 1));
+                                if (crossingPoint != null) {
+                                    List<LatLng> polygonPoints = new ArrayList<>(polylinePoints.subList(i + 1, polylinePoints.size() - 1));
+                                    polylinePoints = new LinkedList<>(polylinePoints.subList(0, i));
+                                    polygonList.add(googleMap.addPolygon(new PolygonOptions()
+                                            .addAll(polygonPoints)
+                                            .strokeWidth(20)
+                                            .strokeColor(Color.YELLOW)
+                                            .fillColor(Color.YELLOW)));
+                                    polylinePoints.add(crossingPoint);
+                                }
+                            }
                         }
+
+                        polylinePoints.add(new LatLng(location.getLatitude(), location.getLongitude()));
+                        polyline.remove();
+                        polyline = googleMap.addPolyline(new PolylineOptions()
+                                .addAll(polylinePoints)
+                                .width(20)
+                                .color(Color.RED)
+                                .startCap(new RoundCap())
+                                .endCap(new RoundCap()));
                     }
-                    polylinePoints.add(new LatLng(location.getLatitude(), location.getLongitude()));
+                    if (isCameraMoving) {
+                        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentLocation, 18);
+                        googleMap.animateCamera(cameraUpdate);
+                    }
                 }
-                polyline.remove();
-                polyline = googleMap.addPolyline(new PolylineOptions()
-                        .addAll(polylinePoints)
-                        .width(20)
-                        .color(Color.RED)
-                        .startCap(new RoundCap())
-                        .endCap(new RoundCap()));
 
             }
+
         };
         try {
             fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
@@ -120,6 +169,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -127,10 +177,44 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.fr_google_map);
         supportMapFragment.getMapAsync(this);
-        binding.btClear.setOnClickListener(v -> {
-            polyline.remove();
-            polylinePoints.clear();
-            polyline.setPoints(polylinePoints);
+        binding.btLeaderboard.setOnClickListener(v -> Navigation.findNavController(binding.getRoot())
+                .navigate(R.id.action_mapFragment_to_leaderboardFragment));
+        binding.btMyLocation.setOnClickListener(v -> {
+            if (isGeoEnabled()) {
+                if (currentLocation != null) {
+                    isCameraMoving = !isCameraMoving;
+                    if (isCameraMoving) {
+                        binding.btMyLocation.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.green));
+                        binding.btMyLocation.setImageTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_F2));
+                        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentLocation, 18);
+                        googleMap.animateCamera(cameraUpdate);
+                    } else {
+                        binding.btMyLocation.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_F2));
+                        binding.btMyLocation.setImageTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_33));
+                    }
+                }
+            } else {
+                startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            }
+        });
+        binding.btStart.setOnClickListener(v -> {
+            isPaintingActive = !isPaintingActive;
+            if (isPaintingActive) {
+                binding.btStart.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.green));
+                binding.btStart.setImageTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_F2));
+            } else {
+                binding.btStart.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_F2));
+                binding.btStart.setImageTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_33));
+                polylinePoints.clear();
+                polyline.remove();
+                saveShapes();
+                polyline = googleMap.addPolyline(new PolylineOptions()
+                        .addAll(polylinePoints)
+                        .width(20)
+                        .color(Color.RED)
+                        .startCap(new RoundCap())
+                        .endCap(new RoundCap()));
+            }
         });
         return binding.getRoot();
     }
@@ -144,25 +228,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
+        googleMap.getUiSettings().setMyLocationButtonEnabled(false);
         if (isLocationPermissionGranted())
             enableMyLocation();
         polyline = googleMap.addPolyline(new PolylineOptions().width(0));
-
-        //googleMap.setBuildingsEnabled(false);
         googleMap.setMapStyle(
                 MapStyleOptions.loadRawResourceStyle(
                         requireContext(), R.raw.style_json));
-
         googleMap.setTrafficEnabled(false);
-        //googleMap.moveCamera(new ICameraUpdateFactoryDelegate().newCameraPosition());
-        Polygon polygon1 = googleMap.addPolygon(new PolygonOptions().fillColor(Color.GREEN)
-                .add(new LatLng(0, 0), new LatLng(1, 0),
-                        new LatLng(1,1), new LatLng(0,1),
-                        new LatLng(0.5, 0.5)));
-        Polygon polygon2 = googleMap.addPolygon(new PolygonOptions().fillColor(Color.GREEN)
-                .add(new LatLng(0, 0), new LatLng(-0.5, 0.5),
-                        new LatLng(0,1) ));
-
 
     }
 
@@ -189,76 +262,36 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private void enableMyLocation() {
         try {
             googleMap.setMyLocationEnabled(true);
-            googleMap.getUiSettings().setMyLocationButtonEnabled(true);
-
         } catch (SecurityException e) {
             Log.e(LOG_TAG, e.getMessage());
         }
     }
 
-   /* private void enableLocationSettings() {
-        LocationRequest locationRequest = LocationRequest.create()
-                .setInterval(5000)
-                .setFastestInterval(2000)
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    private boolean isGeoEnabled() {
+        LocationManager locationManager = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
+        boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        return isGPSEnabled && isNetworkEnabled;
+    }
 
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
+    public void saveShapes() {
+        Log.d("TAG", "loading");
+        List<Shape> shapeList = new ArrayList<>();
+        for (Polygon polygon : polygonList) {
+            List<Point> pointList = polygon.getPoints().stream().map(latLng -> new Point(latLng.latitude, latLng.longitude)).collect(Collectors.toList());
+            shapeList.add(new Shape(authorizedUser, pointList));
+        }
+        ShapeRepository.saveAllShapes(shapeList).enqueue(new Callback<List<Shape>>() {
+            @Override
+            public void onResponse(Call<List<Shape>> call, Response<List<Shape>> response) {
+                Log.d(LOG_TAG, response.code() + "");
+            }
 
-        SettingsClient client = LocationServices.getSettingsClient(requireActivity());
-        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
-
-        task.addOnCompleteListener(task1 -> {
-            try {
-                LocationSettingsResponse response = task1.getResult(ApiException.class);
-            } catch (ApiException apiException) {
-
-                switch (apiException.getStatusCode()) {
-
-                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        try {
-                            ResolvableApiException resolvableApiException = (ResolvableApiException) apiException;
-                            resolvableApiException.startResolutionForResult(requireActivity(), 2);
-                        } catch (IntentSender.SendIntentException sendIntentException) {
-                            sendIntentException.printStackTrace();
-                        }
-                        break;
-
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        Log.e(LOG_TAG, "Location is now available on this device");
-                }
-
+            @Override
+            public void onFailure(Call<List<Shape>> call, Throwable t) {
+                Log.d(LOG_TAG, "failure");
             }
         });
-
-    }*/
-
-    private LatLng[] PolylineSelfCrossingPoint(LatLng newLocationPoint) {
-        LatLng AEndPoint = newLocationPoint;
-        LatLng AStartPoint = polylinePoints.peekLast();
-        double v = AEndPoint.latitude - AStartPoint.latitude;
-        double w = AEndPoint.longitude - AStartPoint.longitude;
-        LatLng BStartPoint = null;
-        LatLng BEndPoint = null;
-        for (LatLng point : polylinePoints) {
-            BStartPoint = BEndPoint;
-            BEndPoint = point;
-            if (BStartPoint != null && BEndPoint != AStartPoint){
-                double v2 = BEndPoint.latitude - BStartPoint.latitude;
-                double w2 = BEndPoint.longitude - BStartPoint.longitude;
-                double lenA = Math.sqrt(v * v + w * w);
-                double lenB = Math.sqrt(v2 * v2 + w2 * w2);
-                double diff = 0.000001;
-                if(Math.abs(v/lenA - v2/lenB) < diff
-                        && Math.abs(w/lenA - w2/lenB) < diff)
-                    continue;
-                double t2 = (-w * BStartPoint.latitude + w * AStartPoint.latitude + v * BStartPoint.longitude - v * AStartPoint.longitude) / (w * v2 - v * w2);
-                double t = (BStartPoint.latitude - AStartPoint.latitude + v2 * t2) / v;
-                if(t > 0 && t < 1 && t2 > 0 && t2 < 1){
-                    return new LatLng[]{BStartPoint, new LatLng(BStartPoint.latitude + v2 * t2, BStartPoint.longitude + w2 * t2)};
-                }
-            }
-        }
-        return null;
     }
+
 }

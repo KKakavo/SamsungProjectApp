@@ -10,13 +10,42 @@
         android:layout_height="match_parent"
         android:background="@color/white"
         tools:context="com.samsung.samsungproject.feature.map.ui.MapFragment"/>
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/bt_clear"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Clear polyline"
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/bt_start"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="@drawable/rect_round_20dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_margin="80dp" />
+        android:backgroundTint="?attr/colorPrimary"
+        android:src="@drawable/ic_drawing"
+        android:tint="?attr/colorSecondary"
+        android:layout_marginBottom="50dp"/>
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/bt_leaderboard"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/rect_round_16dp"
+        android:backgroundTint="?attr/colorPrimary"
+        app:layout_constraintEnd_toStartOf="@id/bt_start"
+        app:layout_constraintBottom_toBottomOf="@id/bt_start"
+        app:layout_constraintTop_toTopOf="@id/bt_start"
+        android:src="@drawable/ic_union"
+        android:tint="?attr/colorSecondary"
+        android:layout_marginEnd="10dp"/>
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/bt_myLocation"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/rect_round_16dp"
+        android:backgroundTint="?attr/colorPrimary"
+        app:layout_constraintStart_toEndOf="@id/bt_start"
+        app:layout_constraintBottom_toBottomOf="@id/bt_start"
+        app:layout_constraintTop_toTopOf="@id/bt_start"
+        android:src="@drawable/ic_my_location"
+        android:tint="?attr/colorSecondary"
+        android:layout_marginStart="10dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

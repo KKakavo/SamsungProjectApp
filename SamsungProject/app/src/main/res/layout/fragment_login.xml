@@ -4,44 +4,75 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".feature.login.ui.LoginFragment">
+    tools:context=".feature.login.ui.LoginFragment"
+    android:background="?attr/colorPrimary">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/log_gl"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.3"/>
+        app:layout_constraintGuide_percent="0.27"/>
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/start_gl"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="16dp"/>
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/end_gl"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="16dp"/>
+    <TextView
+        android:id="@+id/tv_email"
+        style="@style/tv_hint"
+        android:text="@string/e_mail"
+        app:layout_constraintStart_toStartOf="@id/start_gl"
+        app:layout_constraintTop_toTopOf="@id/log_gl" />
     <EditText
         android:id="@+id/log_et_email"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="@id/log_gl"
-        app:layout_constraintStart_toStartOf="parent"
-        android:hint="email"/>
+        style="@style/et_base"
+        app:layout_constraintTop_toBottomOf="@id/tv_email"
+        android:layout_marginTop="4dp"
+        app:layout_constraintStart_toStartOf="@id/start_gl"
+        app:layout_constraintEnd_toEndOf="@id/end_gl"
+        android:hint="@string/e_mail_input"
+        android:autofillHints="emailAddress"
+        android:inputType="textEmailAddress" />
+    <TextView
+        android:id="@+id/tv_password"
+        style="@style/tv_hint"
+        android:text="@string/password"
+        app:layout_constraintStart_toStartOf="@id/start_gl"
+        app:layout_constraintTop_toBottomOf="@id/log_et_email"
+        android:layout_marginTop="20dp" />
     <EditText
         android:id="@+id/log_et_password"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/log_et_email"
-        android:hint="password"
-        android:inputType="textPassword"/>
+        style="@style/et_base"
+        app:layout_constraintStart_toStartOf="@id/start_gl"
+        app:layout_constraintEnd_toEndOf="@id/end_gl"
+        app:layout_constraintTop_toBottomOf="@id/tv_password"
+        android:layout_marginTop="4dp"
+        android:hint="@string/password_input"
+        android:inputType="textPassword"
+        android:autofillHints="password" />
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/log_acb_submit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:id="@+id/log_acb_enter"
+        style="@style/acb_entrance"
         app:layout_constraintTop_toBottomOf="@id/log_et_password"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:text="submit"/>
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/log_acb_register"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/log_acb_submit"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:text="register"/>
+        app:layout_constraintStart_toStartOf="@id/start_gl"
+        app:layout_constraintEnd_toEndOf="@id/end_gl"
+        android:layout_marginTop="40dp"
+        android:text="@string/login"/>
+    <TextView
+        android:id="@+id/log_tv_registration"
+        style="@style/tv_hyper"
+        android:text="@string/u_registration"
+        app:layout_constraintTop_toBottomOf="@id/log_acb_enter"
+        app:layout_constraintStart_toStartOf="@id/start_gl"
+        app:layout_constraintEnd_toEndOf="@id/end_gl"
+        android:layout_marginTop="23dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
