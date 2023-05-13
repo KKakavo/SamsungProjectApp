@@ -1,22 +1,10 @@
 package com.samsung.samsungproject.feature.map.presentation;
 
-import android.graphics.Color;
-import android.location.Location;
-
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.maps.model.RoundCap;
-import com.samsung.samsungproject.domain.model.Point;
-import com.samsung.samsungproject.domain.model.Shape;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class MapHelper {

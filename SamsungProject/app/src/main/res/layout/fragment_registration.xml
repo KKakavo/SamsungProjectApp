@@ -96,7 +96,9 @@
         android:text="@string/registration"
         app:layout_constraintEnd_toEndOf="@id/end_gl"
         app:layout_constraintStart_toStartOf="@id/start_gl"
-        app:layout_constraintTop_toBottomOf="@id/reg_et_password" />
+        app:layout_constraintTop_toBottomOf="@id/reg_et_password"
+        android:background="@drawable/rect_round_10dp"
+        android:stateListAnimator="@null"/>
     <TextView
         android:id="@+id/reg_tv_login"
         style="@style/tv_hyper"

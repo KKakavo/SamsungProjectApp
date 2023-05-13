@@ -1,15 +1,8 @@
 package com.samsung.samsungproject.feature.login.ui;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.Navigation;
-
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -18,13 +11,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
+
 import com.samsung.samsungproject.R;
 import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentLoginBinding;
 import com.samsung.samsungproject.domain.model.User;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
-import at.favre.lib.crypto.bcrypt.BCryptFormatter;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

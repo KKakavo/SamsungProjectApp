@@ -51,13 +51,21 @@ dependencies {
     implementation "com.google.android.gms:play-services-location:$location_version"
     implementation "com.google.maps.android:android-maps-utils:$utils_version"
 
-
     // Retrofit
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
     implementation "com.squareup.retrofit2:converter-moshi:$retrofit_version"
 
     // BCrypt
     implementation group: 'at.favre.lib', name: 'bcrypt', version: "$bcrypt_version"
+
+    // Room
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
+
+
+
+
 
 
 }

@@ -2,18 +2,19 @@ package com.samsung.samsungproject.feature.map.ui;
 
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
-import android.graphics.Camera;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Looper;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -22,32 +23,17 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
-import android.os.Looper;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Toast;
-
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.Granularity;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.Priority;
-import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.StreetViewPanorama;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
@@ -56,9 +42,6 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
-import com.google.android.gms.tasks.Task;
-import com.google.maps.android.PolyUtil;
-import com.google.maps.android.SphericalUtil;
 import com.samsung.samsungproject.R;
 import com.samsung.samsungproject.data.repository.ShapeRepository;
 import com.samsung.samsungproject.databinding.FragmentMapBinding;
@@ -69,7 +52,6 @@ import com.samsung.samsungproject.feature.map.presentation.MapHelper;
 import com.samsung.samsungproject.feature.map.presentation.MapViewModel;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,6 +67,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private FusedLocationProviderClient fusedLocationProviderClient;
     private List<LatLng> polylinePoints;
     List<Polygon> polygonList;
+    List<PolygonOptions> downloadedPolygons;
     private final String LOG_TAG = "TAG";
     private LatLng currentLocation;
     private boolean isPaintingActive = false;
@@ -113,6 +96,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         viewModel = new ViewModelProvider(this).get(MapViewModel.class);
         polylinePoints = new ArrayList<>();
         polygonList = new ArrayList<>();
+        downloadedPolygons = new ArrayList<>();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         LocationRequest locationRequest = new LocationRequest
                 .Builder(Priority.PRIORITY_HIGH_ACCURACY, 500)
@@ -133,7 +117,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                                         polylinePoints.get(i), polylinePoints.get(i + 1));
                                 if (crossingPoint != null) {
                                     List<LatLng> polygonPoints = new ArrayList<>(polylinePoints.subList(i + 1, polylinePoints.size() - 1));
-                                    polylinePoints = new LinkedList<>(polylinePoints.subList(0, i));
+                                    polylinePoints = polylinePoints.subList(0, i);
                                     polygonList.add(googleMap.addPolygon(new PolygonOptions()
                                             .addAll(polygonPoints)
                                             .strokeWidth(20)
@@ -207,13 +191,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 binding.btStart.setImageTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_33));
                 polylinePoints.clear();
                 polyline.remove();
-                saveShapes();
+                saveAllShapes();
                 polyline = googleMap.addPolyline(new PolylineOptions()
                         .addAll(polylinePoints)
                         .width(20)
                         .color(Color.RED)
                         .startCap(new RoundCap())
                         .endCap(new RoundCap()));
+                polygonList.clear();
             }
         });
         return binding.getRoot();
@@ -237,6 +222,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                         requireContext(), R.raw.style_json));
         googleMap.setTrafficEnabled(false);
 
+        dowloadAllShapes();
     }
 
 
@@ -274,13 +260,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         return isGPSEnabled && isNetworkEnabled;
     }
 
-    public void saveShapes() {
+    private void saveAllShapes() {
         Log.d("TAG", "loading");
         List<Shape> shapeList = new ArrayList<>();
-        for (Polygon polygon : polygonList) {
-            List<Point> pointList = polygon.getPoints().stream().map(latLng -> new Point(latLng.latitude, latLng.longitude)).collect(Collectors.toList());
-            shapeList.add(new Shape(authorizedUser, pointList));
-        }
+        for (Polygon polygon : polygonList)
+            shapeList.add(polygonToShape(polygon));
         ShapeRepository.saveAllShapes(shapeList).enqueue(new Callback<List<Shape>>() {
             @Override
             public void onResponse(Call<List<Shape>> call, Response<List<Shape>> response) {
@@ -293,5 +277,37 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             }
         });
     }
+    private void dowloadAllShapes(){
+        ShapeRepository.getAllShapes().enqueue(new Callback<List<Shape>>() {
+            @Override
+            public void onResponse(Call<List<Shape>> call, Response<List<Shape>> response) {
+                if(response.isSuccessful())
+                    downloadedPolygons = response.body().stream().map(shape -> shapeToPolygon(shape)).collect(Collectors.toList());
+                for (PolygonOptions downloadedPolygon : downloadedPolygons) {
+                    googleMap.addPolygon(downloadedPolygon);
+                }
+            }
 
+            @Override
+            public void onFailure(Call<List<Shape>> call, Throwable t) {
+            }
+        });
+    }
+    public LatLng pointToLatLng(Point point){
+        return new LatLng(point.getLatitude(), point.getLongitude());
+    }
+    public Point latLngToPoint(LatLng latLng){
+        return new Point(latLng.latitude, latLng.longitude);
+    }
+    public Shape polygonToShape(Polygon polygon){
+        return new Shape(authorizedUser,
+                polygon.getPoints().stream().map(this::latLngToPoint).collect(Collectors.toList()));
+    }
+    public PolygonOptions shapeToPolygon(Shape shape){
+        return new PolygonOptions()
+                .addAll(shape.getPointList().stream().map(this::pointToLatLng).collect(Collectors.toList()))
+                .fillColor(Color.GREEN)
+                .strokeWidth(20)
+                .strokeColor(Color.GREEN);
+    }
 }

@@ -14,4 +14,7 @@ public class ShapeRepository {
     public static Call<List<Shape>> saveAllShapes(List<Shape> shapeList){
         return ShapeApiService.getInstance().saveAllShapes(shapeList);
     }
+    public static Call<List<Shape>> getAllShapes(){
+        return ShapeApiService.getInstance().getAllShapes();
+    }
 }

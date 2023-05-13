@@ -47,5 +47,4 @@
         android:src="@drawable/ic_my_location"
         android:tint="?attr/colorSecondary"
         android:layout_marginStart="10dp"/>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

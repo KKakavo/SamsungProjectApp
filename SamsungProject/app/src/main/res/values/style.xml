@@ -24,9 +24,7 @@
         <item name="android:textSize">17sp</item>
         <item name="android:textColor">@color/gray_82</item>
         <item name="android:textAllCaps">false</item>
-        <item name="background">@drawable/rect_round_10dp</item>
         <item name="backgroundTint">@color/gray_BD</item>
-        <item name="selectableItemBackground">@null</item>
         <item name="android:fontFamily">@font/open_sans_semibold</item>
     </style>
     <style name="tv_hyper">
@@ -42,5 +40,10 @@
         <item name="android:textSize">32sp</item>
         <item name="android:textColor">@color/gray_8C</item>
         <item name="android:fontFamily">@font/open_sans_bold</item>
+    </style>
+    <style name="acb_map">
+        <item name="background">@drawable/rect_round_16dp</item>
+        <item name="backgroundTint">@color/gray_F2</item>
+        <item name="tint">@color/gray_33</item>
     </style>
 </resources>
