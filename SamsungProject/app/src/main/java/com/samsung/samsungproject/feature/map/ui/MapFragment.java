@@ -43,11 +43,13 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
 import com.samsung.samsungproject.R;
+import com.samsung.samsungproject.data.dto.ShapeDto;
 import com.samsung.samsungproject.data.repository.ShapeRepository;
 import com.samsung.samsungproject.databinding.FragmentMapBinding;
 import com.samsung.samsungproject.domain.model.Point;
 import com.samsung.samsungproject.domain.model.Shape;
 import com.samsung.samsungproject.domain.model.User;
+import com.samsung.samsungproject.domain.room.relation.ShapeWithPointsAndUser;
 import com.samsung.samsungproject.feature.map.presentation.MapHelper;
 import com.samsung.samsungproject.feature.map.presentation.MapViewModel;
 
@@ -72,27 +74,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private LatLng currentLocation;
     private boolean isPaintingActive = false;
     private boolean isCameraMoving = false;
-    private SharedPreferences sharedPreferences;
     private User authorizedUser;
-    private final static String NICKNAME_KEY = "NICKNAME_KEY";
-    private final static String EMAIL_KEY = "EMAIL_KEY";
-    private final static String PASSWORD_KEY = "PASSWORD_KEY";
-    private final static String ID_KEY = "ID_KEY";
-    private final static String ROLE_KEY = "ROLE_KEY";
+    private MapFragmentArgs args;
 
     Polyline polyline;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        args = MapFragmentArgs.fromBundle(requireArguments());
         if (!isLocationPermissionGranted())
             launchLocationPermissionRequest();
-        sharedPreferences = requireActivity().getPreferences(Context.MODE_PRIVATE);
-        authorizedUser = new User(sharedPreferences.getLong(ID_KEY, 0),
-                sharedPreferences.getString(EMAIL_KEY, null),
-                sharedPreferences.getString(NICKNAME_KEY, null),
-                sharedPreferences.getString(PASSWORD_KEY, null),
-                sharedPreferences.getString(ROLE_KEY, null));
+        authorizedUser = args.getUser();
         viewModel = new ViewModelProvider(this).get(MapViewModel.class);
         polylinePoints = new ArrayList<>();
         polygonList = new ArrayList<>();
@@ -262,52 +255,37 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private void saveAllShapes() {
         Log.d("TAG", "loading");
-        List<Shape> shapeList = new ArrayList<>();
+        List<ShapeWithPointsAndUser> shapeList = new ArrayList<>();
         for (Polygon polygon : polygonList)
-            shapeList.add(polygonToShape(polygon));
-        ShapeRepository.saveAllShapes(shapeList).enqueue(new Callback<List<Shape>>() {
+            shapeList.add(MapHelper.polygonToShape(polygon, authorizedUser));
+        shapeList.stream().map(shape -> ShapeDto.toDto(shape)).collect(Collectors.toList());
+        ShapeRepository.saveAllShapes(shapeList).enqueue(new Callback<List<ShapeDto>>() {
             @Override
-            public void onResponse(Call<List<Shape>> call, Response<List<Shape>> response) {
+            public void onResponse(Call<List<ShapeDto>> call, Response<List<ShapeDto>> response) {
                 Log.d(LOG_TAG, response.code() + "");
             }
 
             @Override
-            public void onFailure(Call<List<Shape>> call, Throwable t) {
+            public void onFailure(Call<List<ShapeDto>> call, Throwable t) {
                 Log.d(LOG_TAG, "failure");
             }
         });
     }
     private void dowloadAllShapes(){
-        ShapeRepository.getAllShapes().enqueue(new Callback<List<Shape>>() {
+        ShapeRepository.getAllShapes().enqueue(new Callback<List<ShapeDto>>() {
             @Override
-            public void onResponse(Call<List<Shape>> call, Response<List<Shape>> response) {
+            public void onResponse(Call<List<ShapeDto>> call, Response<List<ShapeDto>> response) {
                 if(response.isSuccessful())
-                    downloadedPolygons = response.body().stream().map(shape -> shapeToPolygon(shape)).collect(Collectors.toList());
+                    downloadedPolygons = response.body().stream().map(shapeDto -> MapHelper.shapeToPolygon(ShapeDto.toDomainObject(shapeDto))).collect(Collectors.toList());
+
                 for (PolygonOptions downloadedPolygon : downloadedPolygons) {
                     googleMap.addPolygon(downloadedPolygon);
                 }
             }
 
             @Override
-            public void onFailure(Call<List<Shape>> call, Throwable t) {
+            public void onFailure(Call<List<ShapeDto>> call, Throwable t) {
             }
         });
-    }
-    public LatLng pointToLatLng(Point point){
-        return new LatLng(point.getLatitude(), point.getLongitude());
-    }
-    public Point latLngToPoint(LatLng latLng){
-        return new Point(latLng.latitude, latLng.longitude);
-    }
-    public Shape polygonToShape(Polygon polygon){
-        return new Shape(authorizedUser,
-                polygon.getPoints().stream().map(this::latLngToPoint).collect(Collectors.toList()));
-    }
-    public PolygonOptions shapeToPolygon(Shape shape){
-        return new PolygonOptions()
-                .addAll(shape.getPointList().stream().map(this::pointToLatLng).collect(Collectors.toList()))
-                .fillColor(Color.GREEN)
-                .strokeWidth(20)
-                .strokeColor(Color.GREEN);
     }
 }

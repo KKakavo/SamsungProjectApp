@@ -1,37 +1,38 @@
 package com.samsung.samsungproject.domain.model;
 
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import java.util.List;
 
 
-@Entity
+@Entity(tableName = "shapes")
 public class Shape {
     @PrimaryKey
     private long id;
-    //private User user;
+    @ColumnInfo(name = "user_id")
     private long user_id;
-    //private List<Point> pointList;
 
-    public Shape(User user, List<Point> pointList) {
-        this.user = user;
-        this.pointList = pointList;
+    public void setId(long id) {
+        this.id = id;
     }
 
-    public User getUser() {
-        return user;
+    public Shape(long id, long user_id) {
+        this.id = id;
+        this.user_id = user_id;
     }
 
-    public List<Point> getPointList() {
-        return pointList;
+    public void setUser_id(long user_id) {
+        this.user_id = user_id;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public long getId() {
+        return id;
     }
 
-    public void setPointList(List<Point> pointList) {
-        this.pointList = pointList;
+    public long getUser_id() {
+        return user_id;
     }
 }

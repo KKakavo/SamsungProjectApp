@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.samsung.samsungproject.R;
+import com.samsung.samsungproject.data.dto.UserDto;
 import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentLoginBinding;
 import com.samsung.samsungproject.domain.model.User;
@@ -29,12 +30,6 @@ public class LoginFragment extends Fragment {
 
 
     private FragmentLoginBinding binding;
-    private SharedPreferences sharedPreferences;
-    private final static String NICKNAME_KEY = "NICKNAME_KEY";
-    private final static String EMAIL_KEY = "EMAIL_KEY";
-    private final static String PASSWORD_KEY = "PASSWORD_KEY";
-    private final static String ID_KEY = "ID_KEY";
-    private final static String ROLE_KEY = "ROLE_KEY";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -73,51 +68,38 @@ public class LoginFragment extends Fragment {
         };
         binding.logEtEmail.addTextChangedListener(textWatcher);
         binding.logEtPassword.addTextChangedListener(textWatcher);
-        if(isUserSaved()){
-            UserRepository.getUserByEmail(sharedPreferences.getString(EMAIL_KEY,null))
-                    .enqueue(new Callback<User>() {
+        long id = User.getIdFromSharedPreferences(requireActivity());
+        if(id != 0){
+            UserRepository.getUserById(id)
+                    .enqueue(new Callback<UserDto>() {
                         @Override
-                        public void onResponse(Call<User> call, Response<User> response) {
+                        public void onResponse(Call<UserDto> call, Response<UserDto> response) {
                             if (response.isSuccessful()) {
-                                User user = new User(response.body().getId(),
-                                        response.body().getEmail(),
-                                        response.body().getNickname(),
-                                        response.body().getPassword(),
-                                        response.body().getRole());
-                                if (sharedPreferences.getString(PASSWORD_KEY, null).equals(user.getPassword())) {
+                                User user = UserDto.toDomainObject(response.body());
+                                if (User.getPasswordFromSharedPreferences(requireActivity()).equals(user.getPassword())) {
                                     Navigation.findNavController(binding.getRoot())
-                                            .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment());
+                                            .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment(user));
                                 }
                             }
                         }
 
                         @Override
-                        public void onFailure(Call<User> call, Throwable t) {
+                        public void onFailure(Call<UserDto> call, Throwable t) {
                             Log.e("TAG", t.getMessage());
                         }
                     });
         }
         binding.logAcbEnter.setOnClickListener(v -> UserRepository.getUserByEmail(binding.logEtEmail.getText().toString())
-                .enqueue(new Callback<User>() {
+                .enqueue(new Callback<UserDto>() {
                     @Override
-                    public void onResponse(Call<User> call, Response<User> response) {
+                    public void onResponse(Call<UserDto> call, Response<UserDto> response) {
                         if (response.isSuccessful()) {
-                            User user = new User(response.body().getId(),
-                                    response.body().getEmail(),
-                                    response.body().getNickname(),
-                                    response.body().getPassword(),
-                                    response.body().getRole());
+                            User user = UserDto.toDomainObject(response.body());
                             BCrypt.Result result = BCrypt.verifyer().verify(binding.logEtPassword.getText().toString().toCharArray(), user.getPassword().toCharArray());
                             if (result.verified) {
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.putString(EMAIL_KEY, user.getEmail());
-                                editor.putString(NICKNAME_KEY, user.getNickname());
-                                editor.putString(PASSWORD_KEY, user.getPassword());
-                                editor.putString(ROLE_KEY, user.getRole());
-                                editor.putLong(ID_KEY, user.getId());
-                                editor.apply();
+                                User.insertUserIntoSharedPreferences(requireActivity(), user.getId(), user.getPassword());
                                 Navigation.findNavController(binding.getRoot())
-                                        .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment());
+                                        .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment(user));
                             }
                             else
                                 Toast.makeText(requireContext(), "wrong password", Toast.LENGTH_LONG).show();
@@ -125,15 +107,11 @@ public class LoginFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(Call<User> call, Throwable t) {
+                    public void onFailure(Call<UserDto> call, Throwable t) {
                         Log.e("TAG", t.getMessage());
                     }
                 }));
         return binding.getRoot();
-    }
-    public boolean isUserSaved(){
-        sharedPreferences = requireActivity().getPreferences(Context.MODE_PRIVATE);
-        return sharedPreferences.getLong(ID_KEY, 0) != 0;
     }
     @Override
     public void onDestroy() {

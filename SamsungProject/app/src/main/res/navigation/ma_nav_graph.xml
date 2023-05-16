@@ -13,13 +13,21 @@
         <action
             android:id="@+id/action_mapFragment_to_leaderboardFragment"
             app:destination="@id/leaderboardFragment" />
+        <argument
+            android:name="user"
+            app:argType="com.samsung.samsungproject.domain.model.User"
+            app:nullable="false"/>
     </fragment>
 
     <fragment
         android:id="@+id/leaderboardFragment"
         android:name="com.samsung.samsungproject.feature.leaderboard.ui.LeaderboardFragment"
         android:label="fragment_leaderboard"
-        tools:layout="@layout/fragment_leaderboard" />
+        tools:layout="@layout/fragment_leaderboard" >
+        <action
+            android:id="@+id/action_leaderboardFragment_to_mapFragment"
+            app:destination="@id/mapFragment" />
+    </fragment>
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.samsung.samsungproject.feature.login.ui.LoginFragment"

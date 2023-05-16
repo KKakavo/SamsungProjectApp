@@ -1,11 +1,20 @@
 package com.samsung.samsungproject.feature.map.presentation;
 
+import android.graphics.Color;
+
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
+import com.samsung.samsungproject.domain.model.Point;
+import com.samsung.samsungproject.domain.model.Shape;
+import com.samsung.samsungproject.domain.model.User;
+import com.samsung.samsungproject.domain.room.relation.ShapeWithPointsAndUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MapHelper {
     private final GoogleMap googleMap;
@@ -37,28 +46,20 @@ public class MapHelper {
         return null;
     }
 
-    /*public void createPolygon(int startPoint,LatLng crossingPoint) {
-        List<LatLng> polygonPoints = new ArrayList<>(polylinePoints.subList(startPoint, polylinePoints.size() - 1));
-        List<Point> points = new ArrayList<>();
-        for (LatLng point : polygonPoints)
-            points.add(new Point(point.latitude, point.longitude));
-        saveShape(new Shape(user, points));
-        polylinePoints = new LinkedList<>(polylinePoints.subList(0, startPoint - 1));
-        googleMap.addPolygon(new PolygonOptions()
-                .addAll(polygonPoints)
-                .strokeWidth(20)
-                .strokeColor(Color.YELLOW)
-                .fillColor(Color.YELLOW));
-
+    public static ShapeWithPointsAndUser polygonToShape(Polygon polygon, User user){
+        return new ShapeWithPointsAndUser(new Shape(0, user.getId()), polygon.getPoints().stream().map(MapHelper::latLngToPoint).collect(Collectors.toList()), user);
     }
-
-    public void TracePolyline() {
-        polyline.remove();
-        polyline = googleMap.addPolyline(new PolylineOptions()
-                .addAll(polylinePoints)
-                .width(20)
-                .color(Color.RED)
-                .startCap(new RoundCap())
-                .endCap(new RoundCap()));
-    }*/
+    public static PolygonOptions shapeToPolygon(ShapeWithPointsAndUser shape){
+        return new PolygonOptions()
+                .addAll(shape.getPointList().stream().map(MapHelper::pointToLatLng).collect(Collectors.toList()))
+                .fillColor(Color.GREEN)
+                .strokeWidth(20)
+                .strokeColor(Color.GREEN);
+    }
+    public static LatLng pointToLatLng(Point point){
+        return new LatLng(point.getLatitude(), point.getLongitude());
+    }
+    public static Point latLngToPoint(LatLng latLng){
+        return new Point(0, latLng.latitude, latLng.longitude);
+    }
 }

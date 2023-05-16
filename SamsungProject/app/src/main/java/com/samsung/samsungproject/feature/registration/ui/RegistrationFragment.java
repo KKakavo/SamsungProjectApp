@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.samsung.samsungproject.R;
+import com.samsung.samsungproject.data.dto.UserDto;
 import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentRegistrationBinding;
 import com.samsung.samsungproject.domain.model.User;
@@ -26,13 +27,7 @@ import retrofit2.Response;
 public class RegistrationFragment extends Fragment {
 
     private FragmentRegistrationBinding binding;
-    private SharedPreferences sharedPreferences;
 
-    private final static String NICKNAME_KEY = "NICKNAME_KEY";
-    private final static String EMAIL_KEY = "EMAIL_KEY";
-    private final static String PASSWORD_KEY = "PASSWORD_KEY";
-    private final static String ID_KEY = "ID_KEY";
-    private final static String ROLE_KEY = "ROLE_KEY";
 
     public RegistrationFragment() {
         // Required empty public constructor
@@ -78,33 +73,24 @@ public class RegistrationFragment extends Fragment {
         binding.regEtNickname.addTextChangedListener(textWatcher);
         binding.regEtEmail.addTextChangedListener(textWatcher);
         binding.regEtPassword.addTextChangedListener(textWatcher);
-        binding.regAcbEnter.setOnClickListener(v -> {
-            UserRepository.saveUser(new User(binding.regEtEmail.getText().toString(),
-                    binding.regEtNickname.getText().toString(),
-                    binding.regEtPassword.getText().toString(),
-                    "user")).enqueue(new Callback<User>() {
-                @Override
-                public void onResponse(Call<User> call, Response<User> response) {
-                    if (response.isSuccessful()) {
-                        User user = response.body();
-                        sharedPreferences = requireActivity().getPreferences(Context.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString(EMAIL_KEY, user.getEmail());
-                        editor.putString(NICKNAME_KEY, user.getNickname());
-                        editor.putString(PASSWORD_KEY, user.getPassword());
-                        editor.putString(ROLE_KEY, user.getRole());
-                        editor.putLong(ID_KEY, user.getId());
-                        editor.apply();
-                        Navigation.findNavController(binding.getRoot())
-                                .navigate(RegistrationFragmentDirections.actionRegistrationFragmentToMapFragment());
-                    }
+        binding.regAcbEnter.setOnClickListener(v -> UserRepository.saveUser(UserDto.toDto(new User(binding.regEtEmail.getText().toString(),
+                binding.regEtNickname.getText().toString(),
+                binding.regEtPassword.getText().toString(),
+                "user", 0))).enqueue(new Callback<UserDto>() {
+            @Override
+            public void onResponse(Call<UserDto> call, Response<UserDto> response) {
+                if (response.isSuccessful()) {
+                    User user = UserDto.toDomainObject(response.body());
+                    User.insertUserIntoSharedPreferences(requireActivity(), user.getId(), user.getPassword());
+                    Navigation.findNavController(binding.getRoot())
+                            .navigate(RegistrationFragmentDirections.actionRegistrationFragmentToMapFragment(user));
                 }
+            }
 
-                @Override
-                public void onFailure(Call<User> call, Throwable t) {
-                }
-            });
-        });
+            @Override
+            public void onFailure(Call<UserDto> call, Throwable t) {
+            }
+        }));
         return binding.getRoot();
     }
 
