@@ -58,9 +58,13 @@ dependencies {
     // BCrypt
     implementation group: 'at.favre.lib', name: 'bcrypt', version: "$bcrypt_version"
 
-    // Room
-    implementation "androidx.room:room-runtime:$room_version"
-    annotationProcessor "androidx.room:room-compiler:$room_version"
+    //WorkManager
+    implementation "androidx.work:work-runtime:$work_version"
+
+    //Gson
+    implementation "com.google.code.gson:gson:$gson_version"
+
+
 
 
 

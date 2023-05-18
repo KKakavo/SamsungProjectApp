@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.samsung.samsungproject.R;
+import com.samsung.samsungproject.domain.db.AppReaderContract;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -14,8 +15,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getApplicationContext().deleteDatabase(AppReaderContract.DATABASE_NAME);
     }
 
-    @Override
-    public void onBackPressed() {}
+   // @Override
+    //public void onBackPressed() {}
 }

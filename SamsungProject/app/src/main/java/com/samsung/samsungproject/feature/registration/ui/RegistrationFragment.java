@@ -14,7 +14,6 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.samsung.samsungproject.R;
-import com.samsung.samsungproject.data.dto.UserDto;
 import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentRegistrationBinding;
 import com.samsung.samsungproject.domain.model.User;
@@ -27,7 +26,6 @@ import retrofit2.Response;
 public class RegistrationFragment extends Fragment {
 
     private FragmentRegistrationBinding binding;
-
 
     public RegistrationFragment() {
         // Required empty public constructor
@@ -73,24 +71,26 @@ public class RegistrationFragment extends Fragment {
         binding.regEtNickname.addTextChangedListener(textWatcher);
         binding.regEtEmail.addTextChangedListener(textWatcher);
         binding.regEtPassword.addTextChangedListener(textWatcher);
-        binding.regAcbEnter.setOnClickListener(v -> UserRepository.saveUser(UserDto.toDto(new User(binding.regEtEmail.getText().toString(),
-                binding.regEtNickname.getText().toString(),
-                binding.regEtPassword.getText().toString(),
-                "user", 0))).enqueue(new Callback<UserDto>() {
-            @Override
-            public void onResponse(Call<UserDto> call, Response<UserDto> response) {
-                if (response.isSuccessful()) {
-                    User user = UserDto.toDomainObject(response.body());
-                    User.insertUserIntoSharedPreferences(requireActivity(), user.getId(), user.getPassword());
-                    Navigation.findNavController(binding.getRoot())
-                            .navigate(RegistrationFragmentDirections.actionRegistrationFragmentToMapFragment(user));
+        binding.regAcbEnter.setOnClickListener(v -> {
+            UserRepository.saveUser(new User(0,binding.regEtEmail.getText().toString(),
+                    binding.regEtNickname.getText().toString(),
+                    binding.regEtPassword.getText().toString(),
+                    "user", 0)).enqueue(new Callback<User>() {
+                @Override
+                public void onResponse(Call<User> call, Response<User> response) {
+                    if (response.isSuccessful()) {
+                        User user = response.body();
+                        User.saveUserToPreferences(requireActivity(), user.getId(), user.getPassword());
+                        Navigation.findNavController(binding.getRoot())
+                                .navigate(RegistrationFragmentDirections.actionRegistrationFragmentToMapFragment(user));
+                    }
                 }
-            }
 
-            @Override
-            public void onFailure(Call<UserDto> call, Throwable t) {
-            }
-        }));
+                @Override
+                public void onFailure(Call<User> call, Throwable t) {
+                }
+            });
+        });
         return binding.getRoot();
     }
 

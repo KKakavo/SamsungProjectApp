@@ -1,11 +1,13 @@
 package com.samsung.samsungproject.data.api.user;
 
-import com.samsung.samsungproject.data.dto.UserDto;
 import com.samsung.samsungproject.domain.model.User;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -13,11 +15,14 @@ import retrofit2.http.Query;
 public interface UserApi {
 
     @POST("user")
-    Call<UserDto> saveUser(@Body UserDto userDto);
+    Call<User> saveUser(@Body User user);
 
     @GET("user")
-    Call<UserDto> getUserByEmail(@Query("email") String email);
-
+    Call<User> getUserByEmail(@Query("email") String email);
     @GET("user/{id}")
-    Call<UserDto> getUserById(@Path("id") long id);
+    Call<User> getUserById(@Path("id") long id);
+    @GET("user/leaderboard")
+    Call<List<User>> getLeaderBoard();
+    @PATCH("user/{id}/score")
+    Call<Void> updateUserScoreById(@Path("id") long id, @Query("score") long score);
 }

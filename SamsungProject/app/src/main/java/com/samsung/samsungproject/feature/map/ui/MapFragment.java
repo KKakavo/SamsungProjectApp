@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,9 +21,15 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
+import androidx.work.Data;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
+import com.google.android.gms.common.util.MapUtils;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.Granularity;
 import com.google.android.gms.location.LocationCallback;
@@ -42,19 +49,31 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.maps.android.SphericalUtil;
 import com.samsung.samsungproject.R;
-import com.samsung.samsungproject.data.dto.ShapeDto;
 import com.samsung.samsungproject.data.repository.ShapeRepository;
+import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentMapBinding;
+import com.samsung.samsungproject.domain.db.AppDbOpenHelper;
+import com.samsung.samsungproject.domain.db.dao.shape.ShapeDao;
+import com.samsung.samsungproject.domain.db.dao.shape.ShapeDaoSqlite;
 import com.samsung.samsungproject.domain.model.Point;
 import com.samsung.samsungproject.domain.model.Shape;
 import com.samsung.samsungproject.domain.model.User;
-import com.samsung.samsungproject.domain.room.relation.ShapeWithPointsAndUser;
 import com.samsung.samsungproject.feature.map.presentation.MapHelper;
 import com.samsung.samsungproject.feature.map.presentation.MapViewModel;
+import com.samsung.samsungproject.feature.map.presentation.ShapeDbThread;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import retrofit2.Call;
@@ -68,28 +87,29 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private GoogleMap googleMap;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private List<LatLng> polylinePoints;
-    List<Polygon> polygonList;
-    List<PolygonOptions> downloadedPolygons;
+    List<PolygonOptions> polygonList;
     private final String LOG_TAG = "TAG";
     private LatLng currentLocation;
     private boolean isPaintingActive = false;
     private boolean isCameraMoving = false;
     private User authorizedUser;
+    private ShapeDao shapeDao;
     private MapFragmentArgs args;
+
 
     Polyline polyline;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        args = MapFragmentArgs.fromBundle(requireArguments());
         if (!isLocationPermissionGranted())
             launchLocationPermissionRequest();
+        args = MapFragmentArgs.fromBundle(requireArguments());
         authorizedUser = args.getUser();
         viewModel = new ViewModelProvider(this).get(MapViewModel.class);
         polylinePoints = new ArrayList<>();
         polygonList = new ArrayList<>();
-        downloadedPolygons = new ArrayList<>();
+        shapeDao = new ShapeDaoSqlite(requireContext());
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         LocationRequest locationRequest = new LocationRequest
                 .Builder(Priority.PRIORITY_HIGH_ACCURACY, 500)
@@ -111,11 +131,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                                 if (crossingPoint != null) {
                                     List<LatLng> polygonPoints = new ArrayList<>(polylinePoints.subList(i + 1, polylinePoints.size() - 1));
                                     polylinePoints = polylinePoints.subList(0, i);
-                                    polygonList.add(googleMap.addPolygon(new PolygonOptions()
+                                    PolygonOptions options = new PolygonOptions()
                                             .addAll(polygonPoints)
                                             .strokeWidth(20)
                                             .strokeColor(Color.YELLOW)
-                                            .fillColor(Color.YELLOW)));
+                                            .fillColor(Color.YELLOW);
+                                    googleMap.addPolygon(options);
+                                    polygonList.add(options);
                                     polylinePoints.add(crossingPoint);
                                 }
                             }
@@ -194,6 +216,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 polygonList.clear();
             }
         });
+        binding.btDelete.setOnClickListener(v -> {System.out.println(shapeDao.findAll());
+            System.out.println(shapeDao.getSize() + "");
+        });
         return binding.getRoot();
     }
 
@@ -214,8 +239,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 MapStyleOptions.loadRawResourceStyle(
                         requireContext(), R.raw.style_json));
         googleMap.setTrafficEnabled(false);
-
-        dowloadAllShapes();
+        //Thread thread = new Thread(new ShapeDbThread(requireContext(), googleMap));
+        //thread.start();
+        downloadRecentShapes();
     }
 
 
@@ -254,37 +280,54 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void saveAllShapes() {
-        Log.d("TAG", "loading");
-        List<ShapeWithPointsAndUser> shapeList = new ArrayList<>();
-        for (Polygon polygon : polygonList)
+        List<Shape> shapeList = new ArrayList<>();
+        long score = authorizedUser.getScore();
+        for (PolygonOptions polygon : polygonList) {
             shapeList.add(MapHelper.polygonToShape(polygon, authorizedUser));
-        shapeList.stream().map(shape -> ShapeDto.toDto(shape)).collect(Collectors.toList());
-        ShapeRepository.saveAllShapes(shapeList).enqueue(new Callback<List<ShapeDto>>() {
+            score += Math.round(SphericalUtil.computeArea(polygon.getPoints()));
+            System.out.println(Math.round(SphericalUtil.computeArea(polygon.getPoints())));
+        }
+        shapeList.forEach(shape -> shapeDao.insert(shape));
+        shapeDao.findAll().forEach(shape -> googleMap.addPolygon(MapHelper.shapeToPolygon(shape)));
+        ShapeRepository.saveAllShapes(shapeList).enqueue(new Callback<List<Shape>>() {
             @Override
-            public void onResponse(Call<List<ShapeDto>> call, Response<List<ShapeDto>> response) {
-                Log.d(LOG_TAG, response.code() + "");
+            public void onResponse(Call<List<Shape>> call, Response<List<Shape>> response) {
             }
 
             @Override
-            public void onFailure(Call<List<ShapeDto>> call, Throwable t) {
+            public void onFailure(Call<List<Shape>> call, Throwable t) {
                 Log.d(LOG_TAG, "failure");
             }
         });
-    }
-    private void dowloadAllShapes(){
-        ShapeRepository.getAllShapes().enqueue(new Callback<List<ShapeDto>>() {
+        UserRepository.updateUserScoreById(authorizedUser.getId(), score).enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<List<ShapeDto>> call, Response<List<ShapeDto>> response) {
-                if(response.isSuccessful())
-                    downloadedPolygons = response.body().stream().map(shapeDto -> MapHelper.shapeToPolygon(ShapeDto.toDomainObject(shapeDto))).collect(Collectors.toList());
+            public void onResponse(Call<Void> call, Response<Void> response) {
+            }
 
-                for (PolygonOptions downloadedPolygon : downloadedPolygons) {
-                    googleMap.addPolygon(downloadedPolygon);
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+
+            }
+        });
+    }
+    private void downloadRecentShapes(){
+        ShapeRepository.getRecentShapes(shapeDao.getSize()).enqueue(new Callback<List<Shape>>() {
+            @Override
+            public void onResponse(Call<List<Shape>> call, Response<List<Shape>> response) {
+                if(response.isSuccessful()) {
+                    response.body().forEach(shapeDao::insert);
+                    List<PolygonOptions> polygonOptionsList = new ArrayList<>(
+                            response.body().stream().map(MapHelper::shapeToPolygon).collect(Collectors.toList()));
+                    for (PolygonOptions polygonOptions : polygonOptionsList) {
+                        googleMap.addPolygon(polygonOptions);
+                        System.out.println(SphericalUtil.computeArea(polygonOptions.getPoints()));
+                    }
+
                 }
             }
 
             @Override
-            public void onFailure(Call<List<ShapeDto>> call, Throwable t) {
+            public void onFailure(Call<List<Shape>> call, Throwable t) {
             }
         });
     }

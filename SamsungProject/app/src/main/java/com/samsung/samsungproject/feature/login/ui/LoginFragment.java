@@ -16,7 +16,6 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.samsung.samsungproject.R;
-import com.samsung.samsungproject.data.dto.UserDto;
 import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentLoginBinding;
 import com.samsung.samsungproject.domain.model.User;
@@ -68,15 +67,15 @@ public class LoginFragment extends Fragment {
         };
         binding.logEtEmail.addTextChangedListener(textWatcher);
         binding.logEtPassword.addTextChangedListener(textWatcher);
-        long id = User.getIdFromSharedPreferences(requireActivity());
+        long id = User.getIdFromPreferences(requireActivity());
         if(id != 0){
             UserRepository.getUserById(id)
-                    .enqueue(new Callback<UserDto>() {
+                    .enqueue(new Callback<User>() {
                         @Override
-                        public void onResponse(Call<UserDto> call, Response<UserDto> response) {
+                        public void onResponse(Call<User> call, Response<User> response) {
                             if (response.isSuccessful()) {
-                                User user = UserDto.toDomainObject(response.body());
-                                if (User.getPasswordFromSharedPreferences(requireActivity()).equals(user.getPassword())) {
+                                User user = response.body();
+                                if (User.getPasswordFromPreferences(requireActivity()).equals(user.getPassword())) {
                                     Navigation.findNavController(binding.getRoot())
                                             .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment(user));
                                 }
@@ -84,20 +83,20 @@ public class LoginFragment extends Fragment {
                         }
 
                         @Override
-                        public void onFailure(Call<UserDto> call, Throwable t) {
+                        public void onFailure(Call<User> call, Throwable t) {
                             Log.e("TAG", t.getMessage());
                         }
                     });
         }
         binding.logAcbEnter.setOnClickListener(v -> UserRepository.getUserByEmail(binding.logEtEmail.getText().toString())
-                .enqueue(new Callback<UserDto>() {
+                .enqueue(new Callback<User>() {
                     @Override
-                    public void onResponse(Call<UserDto> call, Response<UserDto> response) {
+                    public void onResponse(Call<User> call, Response<User> response) {
                         if (response.isSuccessful()) {
-                            User user = UserDto.toDomainObject(response.body());
+                            User user = response.body();
                             BCrypt.Result result = BCrypt.verifyer().verify(binding.logEtPassword.getText().toString().toCharArray(), user.getPassword().toCharArray());
                             if (result.verified) {
-                                User.insertUserIntoSharedPreferences(requireActivity(), user.getId(), user.getPassword());
+                                User.saveUserToPreferences(requireActivity(), user.getId(), user.getPassword());
                                 Navigation.findNavController(binding.getRoot())
                                         .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment(user));
                             }
@@ -107,7 +106,7 @@ public class LoginFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(Call<UserDto> call, Throwable t) {
+                    public void onFailure(Call<User> call, Throwable t) {
                         Log.e("TAG", t.getMessage());
                     }
                 }));

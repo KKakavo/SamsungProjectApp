@@ -1,7 +1,5 @@
 package com.samsung.samsungproject.feature.map.presentation;
 
-import android.graphics.Color;
-
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polygon;
@@ -10,7 +8,6 @@ import com.google.android.gms.maps.model.Polyline;
 import com.samsung.samsungproject.domain.model.Point;
 import com.samsung.samsungproject.domain.model.Shape;
 import com.samsung.samsungproject.domain.model.User;
-import com.samsung.samsungproject.domain.room.relation.ShapeWithPointsAndUser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,20 +43,22 @@ public class MapHelper {
         return null;
     }
 
-    public static ShapeWithPointsAndUser polygonToShape(Polygon polygon, User user){
-        return new ShapeWithPointsAndUser(new Shape(0, user.getId()), polygon.getPoints().stream().map(MapHelper::latLngToPoint).collect(Collectors.toList()), user);
-    }
-    public static PolygonOptions shapeToPolygon(ShapeWithPointsAndUser shape){
-        return new PolygonOptions()
-                .addAll(shape.getPointList().stream().map(MapHelper::pointToLatLng).collect(Collectors.toList()))
-                .fillColor(Color.GREEN)
-                .strokeWidth(20)
-                .strokeColor(Color.GREEN);
-    }
     public static LatLng pointToLatLng(Point point){
         return new LatLng(point.getLatitude(), point.getLongitude());
     }
     public static Point latLngToPoint(LatLng latLng){
-        return new Point(0, latLng.latitude, latLng.longitude);
+        return new Point(latLng.latitude, latLng.longitude);
+    }
+    public static Shape polygonToShape(PolygonOptions polygon, User user){
+        return new Shape(user,
+                polygon.getPoints().stream().map(MapHelper::latLngToPoint).collect(Collectors.toList()),
+                polygon.getFillColor());
+    }
+    public static PolygonOptions shapeToPolygon(Shape shape){
+        return new PolygonOptions()
+                .addAll(shape.getPointList().stream().map(MapHelper::pointToLatLng).collect(Collectors.toList()))
+                .fillColor(shape.getColor())
+                .strokeWidth(20)
+                .strokeColor(shape.getColor());
     }
 }
