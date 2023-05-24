@@ -46,4 +46,12 @@
         <item name="backgroundTint">@color/gray_F2</item>
         <item name="tint">@color/gray_33</item>
     </style>
+    <style name="tv_error_window">
+        <item name="fontFamily">@font/open_sans</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="backgroundTint">@color/red_F4</item>
+        <item name="android:gravity">center</item>
+        <item name="android:visibility">invisible</item>
+    </style>
 </resources>

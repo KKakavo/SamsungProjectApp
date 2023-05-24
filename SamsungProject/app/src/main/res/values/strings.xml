@@ -14,4 +14,8 @@
     <string name="registration_title">Регистрация</string>
     <string name="create_password">Придумайте пароль</string>
     <string name="login_input">Введите логин</string>
+    <string name="wrong_password">Неверный пароль</string>
+    <string name="wrong_email">Неверный E-mail</string>
+    <string name="server_not_responding">Сервер не отвечает</string>
+    <string name="email_registered">E-mail уже зарегистрирован</string>
 </resources>

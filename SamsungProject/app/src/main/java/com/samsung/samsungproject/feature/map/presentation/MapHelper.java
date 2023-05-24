@@ -1,10 +1,23 @@
 package com.samsung.samsungproject.feature.map.presentation;
 
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+
+import androidx.annotation.NonNull;
+
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
+import com.samsung.samsungproject.data.repository.ShapeRepository;
+import com.samsung.samsungproject.data.repository.UserRepository;
+import com.samsung.samsungproject.domain.db.dao.shape.ShapeDao;
+import com.samsung.samsungproject.domain.db.dao.shape.ShapeDaoSqlite;
+import com.samsung.samsungproject.domain.db.dao.user.UserDao;
+import com.samsung.samsungproject.domain.db.dao.user.UserDaoSqlite;
 import com.samsung.samsungproject.domain.model.Point;
 import com.samsung.samsungproject.domain.model.Shape;
 import com.samsung.samsungproject.domain.model.User;
@@ -15,13 +28,12 @@ import java.util.stream.Collectors;
 
 public class MapHelper {
     private final GoogleMap googleMap;
-    private Polyline polyline;
-    private List<LatLng> polylinePoints;
+    private final ShapeDao shapeDao;
     private final static double DIFF = 0.000001;
 
-    public MapHelper(GoogleMap googleMap) {
+    public MapHelper(Context context, GoogleMap googleMap) {
         this.googleMap = googleMap;
-        polylinePoints = new ArrayList<>();
+        this.shapeDao = new ShapeDaoSqlite(context);
     }
 
     public static LatLng crossingPoint(LatLng AStartPoint, LatLng AEndPoint, LatLng BStartPoint, LatLng BEndPoint) {
@@ -49,7 +61,7 @@ public class MapHelper {
     public static Point latLngToPoint(LatLng latLng){
         return new Point(latLng.latitude, latLng.longitude);
     }
-    public static Shape polygonToShape(PolygonOptions polygon, User user){
+    public static Shape polygonToShape(Polygon polygon, User user){
         return new Shape(user,
                 polygon.getPoints().stream().map(MapHelper::latLngToPoint).collect(Collectors.toList()),
                 polygon.getFillColor());
@@ -61,4 +73,19 @@ public class MapHelper {
                 .strokeWidth(20)
                 .strokeColor(shape.getColor());
     }
+   /* public static void downloadRecentShapes(){
+        Handler handler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
+            @Override
+            public boolean handleMessage(@NonNull Message msg) {
+                return ;
+            }
+        });
+        Thread thread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                ShapeRepository.getRecentShapes()
+            }
+        });
+    }*/
 }

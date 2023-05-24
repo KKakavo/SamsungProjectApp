@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "962988436459",
-    "project_id": "mapdrawer-381019",
-    "storage_bucket": "mapdrawer-381019.appspot.com"
+    "project_number": "494270071939",
+    "project_id": "samsungproject-b4b5e",
+    "storage_bucket": "samsungproject-b4b5e.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:962988436459:android:39f7087e6c8bc8f9c007ae",
+        "mobilesdk_app_id": "1:494270071939:android:13731f3d189a9570cb87b6",
         "android_client_info": {
           "package_name": "com.samsung.samsungproject"
         }
       },
       "oauth_client": [
         {
-          "client_id": "962988436459-sajmeli3egb9e4g3abuctbn414vtbcud.apps.googleusercontent.com",
+          "client_id": "494270071939-odh73qs68f2m3ouh052r1n491cm97sd8.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDm0nJMjSEdM1w3ZfIt5vRpJvwyb8r5D_o"
+          "current_key": "AIzaSyCmyYN2EdI_wwPWu5Iwyd3ujA0R5nC5-mQ"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "962988436459-sajmeli3egb9e4g3abuctbn414vtbcud.apps.googleusercontent.com",
+              "client_id": "494270071939-odh73qs68f2m3ouh052r1n491cm97sd8.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -9,7 +9,6 @@ android {
     compileSdk 33
 
 
-
     defaultConfig {
         applicationId "com.samsung.samsungproject"
         minSdk 25
@@ -41,6 +40,8 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$appcompat_version"
     implementation "com.google.android.material:material:$material_version"
     implementation "androidx.constraintlayout:constraintlayout:$constraint_version"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01"
+
 
     // Navigation
     implementation "androidx.navigation:navigation-fragment:$nav_version"
@@ -58,17 +59,11 @@ dependencies {
     // BCrypt
     implementation group: 'at.favre.lib', name: 'bcrypt', version: "$bcrypt_version"
 
-    //WorkManager
+    // WorkManager
     implementation "androidx.work:work-runtime:$work_version"
 
-    //Gson
+    // Gson
     implementation "com.google.code.gson:gson:$gson_version"
-
-
-
-
-
-
 
 
 }

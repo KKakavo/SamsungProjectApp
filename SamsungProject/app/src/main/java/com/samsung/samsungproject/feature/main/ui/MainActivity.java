@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.samsung.samsungproject.R;
+import com.samsung.samsungproject.data.api.RetrofitService;
 import com.samsung.samsungproject.domain.db.AppReaderContract;
 
 public class MainActivity extends AppCompatActivity {

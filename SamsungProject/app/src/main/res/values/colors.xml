@@ -14,5 +14,13 @@
     <color name="gray_82">#828282</color>
     <color name="gray_8C">#8C8C8C</color>
     <color name="gray_BD">#BDBDBD</color>
+    <color name="red_EB">#EB5757</color>
+    <color name="orange">#F2994A</color>
     <color name="yellow">#F2C94C</color>
+    <color name="green_21">#219653</color>
+    <color name="green_6F">#6FCF97</color>
+    <color name="blue_2F">#2F80ED</color>
+    <color name="blue_56">#56CCF2</color>
+    <color name="purple">#BB6BD9</color>
+    <color name="red_F4">#F47676</color>
 </resources>

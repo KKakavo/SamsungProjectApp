@@ -1,7 +1,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <fragment xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/fr_google_map"
@@ -21,7 +22,8 @@
         app:layout_constraintBottom_toBottomOf="@id/bt_leaderboard"
         android:backgroundTint="?attr/colorPrimary"
         android:src="@drawable/ic_delete"
-        android:tint="?attr/colorSecondary" />
+        android:tint="?attr/colorSecondary"
+        android:visibility="invisible"/>
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/bt_start"
         android:layout_width="60dp"
@@ -58,4 +60,14 @@
         android:src="@drawable/ic_my_location"
         android:tint="?attr/colorSecondary"
         android:layout_marginStart="10dp"/>
+    <androidx.appcompat.widget.AppCompatSpinner
+        android:id="@+id/color_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/bt_myLocation"
+        app:layout_constraintTop_toTopOf="@id/bt_myLocation"
+        app:layout_constraintBottom_toBottomOf="@id/bt_myLocation"
+        android:layout_marginStart="50dp"
+        android:spinnerMode="dropdown" />
 </androidx.constraintlayout.widget.ConstraintLayout>

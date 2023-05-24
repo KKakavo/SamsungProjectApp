@@ -21,7 +21,7 @@ public class User implements Serializable {
     private final String role;
     private final long score;
 
-    private final static String ID_KEY = "ID_KEY";
+    private final static String EMAIL_KEY = "EMAIL_KEY";
     private final static String PASSWORD_KEY = "PASSWORD_KEY";
 
     public User(long id, String email, String nickname, String password, String role, int score) {
@@ -33,15 +33,15 @@ public class User implements Serializable {
         this.score = score;
     }
 
-    public static long getIdFromPreferences(FragmentActivity activity){
-        return activity.getPreferences(Context.MODE_PRIVATE).getLong(ID_KEY, 0);
+    public static String getEmailFromPreferences(FragmentActivity activity){
+        return activity.getPreferences(Context.MODE_PRIVATE).getString(EMAIL_KEY, null);
     }
     public static String getPasswordFromPreferences(FragmentActivity activity){
         return activity.getPreferences(Context.MODE_PRIVATE).getString(PASSWORD_KEY, null);
     }
-    public static void saveUserToPreferences(FragmentActivity activity, long id, String password){
+    public static void saveUserToPreferences(FragmentActivity activity, String email, String password){
         SharedPreferences.Editor editor = activity.getPreferences(Context.MODE_PRIVATE).edit();
-        editor.putLong(ID_KEY, id);
+        editor.putString(EMAIL_KEY, email);
         editor.putString(PASSWORD_KEY, password);
         editor.apply();
     }

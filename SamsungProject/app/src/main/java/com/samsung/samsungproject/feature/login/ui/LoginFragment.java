@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
@@ -16,6 +18,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.samsung.samsungproject.R;
+import com.samsung.samsungproject.data.api.RetrofitService;
 import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentLoginBinding;
 import com.samsung.samsungproject.domain.model.User;
@@ -29,6 +32,7 @@ public class LoginFragment extends Fragment {
 
 
     private FragmentLoginBinding binding;
+    private String LOG_TAG = "LoginFragment";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -67,28 +71,44 @@ public class LoginFragment extends Fragment {
         };
         binding.logEtEmail.addTextChangedListener(textWatcher);
         binding.logEtPassword.addTextChangedListener(textWatcher);
-        long id = User.getIdFromPreferences(requireActivity());
-        if(id != 0){
-            UserRepository.getUserById(id)
+        String email = User.getEmailFromPreferences(requireActivity());
+        if(email != null){
+            binding.logEtEmail.setEnabled(false);
+            binding.logEtPassword.setEnabled(false);
+            binding.logAcbEnter.setEnabled(false);
+            UserRepository.getUserByEmail(email)
                     .enqueue(new Callback<User>() {
                         @Override
                         public void onResponse(Call<User> call, Response<User> response) {
                             if (response.isSuccessful()) {
                                 User user = response.body();
                                 if (User.getPasswordFromPreferences(requireActivity()).equals(user.getPassword())) {
+                                    RetrofitService.addCredentials(user.getEmail(), user.getPassword());
                                     Navigation.findNavController(binding.getRoot())
                                             .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment(user));
                                 }
                             }
+                            binding.logEtEmail.setEnabled(true);
+                            binding.logEtPassword.setEnabled(true);
+                            binding.logAcbEnter.setEnabled(true);
                         }
 
                         @Override
                         public void onFailure(Call<User> call, Throwable t) {
-                            Log.e("TAG", t.getMessage());
+                            Log.e(LOG_TAG, t.getMessage());
+                            binding.tvError.setText(R.string.server_not_responding);
+                            binding.tvError.setVisibility(View.VISIBLE);
+                            binding.logEtEmail.setEnabled(true);
+                            binding.logEtPassword.setEnabled(true);
+                            binding.logAcbEnter.setEnabled(true);
                         }
                     });
         }
-        binding.logAcbEnter.setOnClickListener(v -> UserRepository.getUserByEmail(binding.logEtEmail.getText().toString())
+        binding.logAcbEnter.setOnClickListener(v -> {
+            binding.logEtEmail.setEnabled(false);
+            binding.logEtPassword.setEnabled(false);
+            binding.logAcbEnter.setEnabled(false);
+            UserRepository.getUserByEmail(binding.logEtEmail.getText().toString())
                 .enqueue(new Callback<User>() {
                     @Override
                     public void onResponse(Call<User> call, Response<User> response) {
@@ -96,20 +116,35 @@ public class LoginFragment extends Fragment {
                             User user = response.body();
                             BCrypt.Result result = BCrypt.verifyer().verify(binding.logEtPassword.getText().toString().toCharArray(), user.getPassword().toCharArray());
                             if (result.verified) {
-                                User.saveUserToPreferences(requireActivity(), user.getId(), user.getPassword());
+                                User.saveUserToPreferences(requireActivity(), user.getEmail(), user.getPassword());
+                                RetrofitService.addCredentials(binding.logEtEmail.getText().toString() , binding.logEtPassword.getText().toString());
                                 Navigation.findNavController(binding.getRoot())
                                         .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment(user));
                             }
-                            else
-                                Toast.makeText(requireContext(), "wrong password", Toast.LENGTH_LONG).show();
+                            else {
+                                binding.tvError.setText(R.string.wrong_password);
+                                binding.tvError.setVisibility(View.VISIBLE);
+                            }
+                        } else if (response.code() == 400){
+                            binding.tvError.setText(R.string.wrong_email);
+                            binding.tvError.setVisibility(View.VISIBLE);
                         }
+                        binding.logEtEmail.setEnabled(true);
+                        binding.logEtPassword.setEnabled(true);
+                        binding.logAcbEnter.setEnabled(true);
                     }
 
                     @Override
                     public void onFailure(Call<User> call, Throwable t) {
-                        Log.e("TAG", t.getMessage());
+                        Log.e(LOG_TAG, t.getMessage());
+                        binding.tvError.setText(R.string.server_not_responding);
+                        binding.tvError.setVisibility(View.VISIBLE);
+                        binding.logEtEmail.setEnabled(true);
+                        binding.logEtPassword.setEnabled(true);
+                        binding.logAcbEnter.setEnabled(true);
                     }
-                }));
+                });
+        });
         return binding.getRoot();
     }
     @Override
