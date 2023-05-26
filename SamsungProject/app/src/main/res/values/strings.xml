@@ -18,4 +18,7 @@
     <string name="wrong_email">Неверный E-mail</string>
     <string name="server_not_responding">Сервер не отвечает</string>
     <string name="email_registered">E-mail уже зарегистрирован</string>
+    <string name="settings">Настройки</string>
+    <string name="application_theme">Тема приложения</string>
+    <string name="exit_account">Выйти из аккаунта</string>
 </resources>

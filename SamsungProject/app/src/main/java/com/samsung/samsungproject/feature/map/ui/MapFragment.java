@@ -168,6 +168,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.fr_google_map);
         supportMapFragment.getMapAsync(this);
+        binding.btSettings.setOnClickListener(v -> Navigation.findNavController(binding.getRoot()).navigate(MapFragmentDirections.actionMapFragmentToSettingsFragment()));
         binding.btLeaderboard.setOnClickListener(v -> Navigation.findNavController(binding.getRoot())
                 .navigate(MapFragmentDirections.actionMapFragmentToLeaderboardFragment(authorizedUser)));
         binding.btMyLocation.setOnClickListener(v -> {
@@ -312,11 +313,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 shapeList.add(MapHelper.polygonToShape(polygon, authorizedUser));
                 score += Math.round(SphericalUtil.computeArea(polygon.getPoints()));
             }
-            shapeList.forEach(shape -> shapeDao.insert(shape));
-            shapeDao.findAll().forEach(shape -> googleMap.addPolygon(MapHelper.shapeToPolygon(shape)));
             ShapeRepository.saveAllShapes(shapeList).enqueue(new Callback<List<Shape>>() {
                 @Override
                 public void onResponse(Call<List<Shape>> call, Response<List<Shape>> response) {
+                    if(response.isSuccessful())
+                        response.body().forEach(shape -> shapeDao.insert(shape));
                 }
 
                 @Override

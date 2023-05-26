@@ -62,10 +62,12 @@ public class LoginFragment extends Fragment {
                         && binding.logEtPassword.getText().length()>0){
                     binding.logAcbEnter.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_33));
                     binding.logAcbEnter.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.gray_F2));
+                    binding.logAcbEnter.setEnabled(true);
                 }
                 else {
                     binding.logAcbEnter.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_BD));
                     binding.logAcbEnter.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.gray_82));
+                    binding.logAcbEnter.setEnabled(false);
                 }
             }
         };

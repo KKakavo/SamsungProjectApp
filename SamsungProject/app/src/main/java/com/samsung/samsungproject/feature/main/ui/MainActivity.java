@@ -19,6 +19,4 @@ public class MainActivity extends AppCompatActivity {
         getApplicationContext().deleteDatabase(AppReaderContract.DATABASE_NAME);
     }
 
-   // @Override
-    //public void onBackPressed() {}
 }

@@ -29,6 +29,8 @@ public class UserViewHolder extends RecyclerView.ViewHolder {
             binding.itemBackground.setBackgroundTintList(ContextCompat.getColorStateList(binding.getRoot().getContext(), R.color.white));
             if(position>=49)
                 binding.tvPlace.setText("");
+        } else{
+            binding.itemBackground.setBackgroundTintList(ContextCompat.getColorStateList(binding.getRoot().getContext(), R.color.gray_F2));
         }
         switch (position){
             case 0:

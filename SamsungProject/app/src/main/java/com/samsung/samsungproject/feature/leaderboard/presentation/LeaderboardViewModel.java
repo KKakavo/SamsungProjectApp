@@ -17,7 +17,7 @@ public class LeaderboardViewModel extends ViewModel {
     private final MutableLiveData<List<User>> _users = new MutableLiveData<>();
     public LiveData<List<User>> users = _users;
     public void load(){
-        UserRepository.getLeaderBoard().enqueue(new Callback<List<User>>() {
+        UserRepository.getLeaderboard().enqueue(new Callback<List<User>>() {
             @Override
             public void onResponse(Call<List<User>> call, Response<List<User>> response) {
                 if (response.isSuccessful()){

@@ -50,8 +50,7 @@ public class LeaderboardFragment extends Fragment {
                              Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(LeaderboardViewModel.class);
         binding = FragmentLeaderboardBinding.inflate(inflater);
-        binding.btBack.setOnClickListener(v -> Navigation.findNavController(
-                binding.getRoot()).navigate(com.samsung.samsungproject.feature.leaderboard.ui.LeaderboardFragmentDirections.actionLeaderboardFragmentToMapFragment(authorizedUser)));
+        binding.btBack.setOnClickListener(v -> Navigation.findNavController(binding.getRoot()).popBackStack());
         adapter = new UserAdapter(authorizedUser);
         binding.recycler.setAdapter(adapter);
         binding.refreshLayout.setOnRefreshListener(() -> downloadLeaders());
@@ -64,6 +63,13 @@ public class LeaderboardFragment extends Fragment {
     public void onResume() {
         super.onResume();
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        binding = null;
+    }
+
     private void bindLeaderBoard(){
         List<User> leaderboard = new ArrayList<>(userDao.findAll());
         if(leaderboard.size() != 0) {
@@ -75,7 +81,7 @@ public class LeaderboardFragment extends Fragment {
         }
     }
     private void downloadLeaders() {
-        UserRepository.getLeaderBoard().enqueue(new Callback<List<User>>() {
+        UserRepository.getLeaderboard().enqueue(new Callback<List<User>>() {
             @Override
             public void onResponse(Call<List<User>> call, Response<List<User>> response) {
                 if(response.isSuccessful()){

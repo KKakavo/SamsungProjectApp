@@ -27,11 +27,11 @@ public class RetrofitService {
         return retrofit;
     }
     public static void addCredentials(String user, String password){
-        OkHttpClient client = new OkHttpClient.Builder().addInterceptor(new BasicAuthInterceptor(user, password)).build();
+        /*OkHttpClient client = new OkHttpClient.Builder().addInterceptor(new BasicAuthInterceptor(user, password)).build();
         retrofit = new Retrofit.Builder()
                 .addConverterFactory(MoshiConverterFactory.create())
                 .client(client)
                 .baseUrl(BASE_URL)
-                .build();
+                .build();*/
     }
 }

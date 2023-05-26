@@ -18,7 +18,7 @@ public class UserRepository {
     public static Call<User> getUserById(long id){
         return UserApiService.getInstance().getUserById(id);
     }
-    public static Call<List<User>> getLeaderBoard(){
+    public static Call<List<User>> getLeaderboard(){
         return UserApiService.getInstance().getLeaderBoard();
     }
     public static Call<Void> updateUserScoreById(long id, long score){

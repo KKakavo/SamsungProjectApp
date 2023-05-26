@@ -45,7 +45,7 @@ public class RegistrationFragment extends Fragment {
                              Bundle savedInstanceState) {
         binding = FragmentRegistrationBinding.inflate(inflater);
         binding.regTvLogin.setOnClickListener(v -> Navigation.findNavController(binding.getRoot())
-                .navigate(com.samsung.samsungproject.feature.registration.ui.RegistrationFragmentDirections.actionRegistrationFragmentToLoginFragment()));
+                .navigate(RegistrationFragmentDirections.actionRegistrationFragmentToLoginFragment()));
         TextWatcher textWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -64,10 +64,12 @@ public class RegistrationFragment extends Fragment {
                 && binding.regEtNickname.getText().length()>0){
                     binding.regAcbEnter.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_33));
                     binding.regAcbEnter.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.gray_F2));
+                    binding.regAcbEnter.setEnabled(true);
                 }
                 else {
                     binding.regAcbEnter.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_BD));
                     binding.regAcbEnter.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.gray_82));
+                    binding.regAcbEnter.setEnabled(false);
                 }
             }
         };

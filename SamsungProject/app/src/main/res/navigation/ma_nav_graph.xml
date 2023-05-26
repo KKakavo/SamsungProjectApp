@@ -17,6 +17,9 @@
             android:name="user"
             app:argType="com.samsung.samsungproject.domain.model.User"
             app:nullable="true"/>
+        <action
+            android:id="@+id/action_mapFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
     </fragment>
 
     <fragment
@@ -24,11 +27,6 @@
         android:name="com.samsung.samsungproject.feature.leaderboard.ui.LeaderboardFragment"
         android:label="fragment_leaderboard"
         tools:layout="@layout/fragment_leaderboard" >
-        <action
-            android:id="@+id/action_leaderboardFragment_to_mapFragment"
-            app:destination="@id/mapFragment"
-            app:popUpTo="@id/leaderboardFragment"
-            app:popUpToInclusive="true"/>
         <argument
             android:name="user"
             app:argType="com.samsung.samsungproject.domain.model.User"
@@ -61,5 +59,16 @@
         <action
             android:id="@+id/action_registrationFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.samsung.samsungproject.feature.settings.ui.SettingsFragment"
+        android:label="fragment_settings"
+        tools:layout="@layout/fragment_settings" >
+        <action
+            android:id="@+id/action_settingsFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/mapFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
 </navigation>

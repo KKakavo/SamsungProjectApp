@@ -67,7 +67,8 @@
         android:layout_marginTop="40dp"
         android:background="@drawable/rect_round_10dp"
         android:stateListAnimator="@null"
-        android:text="@string/login"/>
+        android:text="@string/login"
+        android:enabled="false"/>
     <TextView
         android:id="@+id/log_tv_registration"
         style="@style/tv_hyper"

@@ -54,4 +54,14 @@
         <item name="android:gravity">center</item>
         <item name="android:visibility">invisible</item>
     </style>
+    <style name="spinner" parent="@android:style/Widget.TextView.SpinnerItem">
+        <item name="android:padding">5dp</item>
+    </style>
+    <style name="tv_settings">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/gray_8C</item>
+        <item name="fontFamily">@font/open_sans</item>
+    </style>
 </resources>
