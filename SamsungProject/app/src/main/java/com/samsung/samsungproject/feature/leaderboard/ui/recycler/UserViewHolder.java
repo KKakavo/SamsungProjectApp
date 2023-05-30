@@ -2,7 +2,9 @@ package com.samsung.samsungproject.feature.leaderboard.ui.recycler;
 
 import android.annotation.SuppressLint;
 import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.graphics.Color;
+import android.util.TypedValue;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -12,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.samsung.samsungproject.R;
 import com.samsung.samsungproject.databinding.LeaderboardItemBinding;
 import com.samsung.samsungproject.domain.model.User;
+import android.content.res.Resources.Theme;
 
 public class UserViewHolder extends RecyclerView.ViewHolder {
     private final LeaderboardItemBinding binding;
@@ -22,16 +25,19 @@ public class UserViewHolder extends RecyclerView.ViewHolder {
         this.authorizedUser = authorizedUser;
     }
     public void bind(User user, int position){
+        Theme theme = binding.getRoot().getContext().getTheme();
         binding.tvPlace.setText(String.valueOf(position + 2));
         binding.tvNickname.setText("@" + user.getNickname());
         binding.tvScore.setText(format(user.getScore()) + " м2");
+        TypedValue typedValue = new TypedValue();
         if (user.getEmail().equals(authorizedUser.getEmail())) {
-            binding.itemBackground.setBackgroundTintList(ContextCompat.getColorStateList(binding.getRoot().getContext(), R.color.white));
+            theme.resolveAttribute(com.google.android.material.R.attr.colorAccent, typedValue, true);
             if(position>=49)
                 binding.tvPlace.setText("");
         } else{
-            binding.itemBackground.setBackgroundTintList(ContextCompat.getColorStateList(binding.getRoot().getContext(), R.color.gray_F2));
+            theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true);
         }
+        binding.itemBackground.setBackgroundTintList(ContextCompat.getColorStateList(binding.getRoot().getContext(), typedValue.resourceId));
         switch (position){
             case 0:
                 binding.tvPlace.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.gray_BD));

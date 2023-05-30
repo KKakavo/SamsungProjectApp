@@ -7,6 +7,7 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
@@ -21,6 +22,7 @@ public interface UserApi {
     Call<User> getUserByEmail(@Query("email") String email);
     @GET("user/{id}")
     Call<User> getUserById(@Path("id") long id);
+
     @GET("user/leaderboard")
     Call<List<User>> getLeaderBoard();
     @PATCH("user/{id}/score")

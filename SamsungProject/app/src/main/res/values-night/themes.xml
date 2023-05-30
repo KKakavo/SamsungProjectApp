@@ -1,16 +1,13 @@
 <resources>
     <!-- Base application theme. -->
     <style name="Theme.SamsungProject" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
         <item name="colorPrimary">@color/gray_33</item>
-        <item name="colorPrimaryVariant">@color/green</item>
-        <item name="colorOnPrimary">@color/black</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_200</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
+        <item name="colorOnPrimary">@color/gray_F2</item>
+        <item name="colorSecondary">@color/gray_3b</item>
+        <item name="colorOnSecondary">@color/gray_82</item>
         <item name="android:statusBarColor">?attr/colorPrimary</item>
-
+        <item name="colorOnError">@color/red_F4</item>
+        <item name="colorButtonNormal">@color/gray_3b</item>
+        <item name="colorAccent">@color/gray_4F</item>
     </style>
 </resources>

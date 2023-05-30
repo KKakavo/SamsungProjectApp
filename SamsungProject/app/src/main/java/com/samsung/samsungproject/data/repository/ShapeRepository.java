@@ -8,16 +8,17 @@ import java.util.List;
 import retrofit2.Call;
 
 public class ShapeRepository {
-    public static Call<Shape> saveShape(Shape shape){
-        return ShapeApiService.getInstance().saveShape(shape);
+    public static long controlSum;
+    public static Call<Shape> saveShape(Shape shape, long score){
+        return ShapeApiService.getInstance().saveShape(shape, score);
     }
-    public static Call<List<Shape>> saveAllShapes(List<Shape> shapeList){
-        return ShapeApiService.getInstance().saveAllShapes(shapeList);
+    public static Call<List<Shape>> saveAllShapes(List<Shape> shapeList, long score){
+        return ShapeApiService.getInstance().saveAllShapes(shapeList, score);
     }
     public static Call<List<Shape>> getAllShapes(){
         return ShapeApiService.getInstance().getAllShapes();
     }
     public static Call<List<Shape>> getRecentShapes(long id){
-        return ShapeApiService.getInstance().getRecentShapes(id);
+        return ShapeApiService.getInstance().getRecentShapes(id, controlSum);
     }
 }

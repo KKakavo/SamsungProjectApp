@@ -6,8 +6,8 @@
         <item name="android:layout_height">40dp</item>
         <item name="android:layout_width">0dp</item>
         <item name="android:padding">8dp</item>
-        <item name="android:textColorHint">@color/gray_82</item>
-        <item name="android:textColor">@color/gray_33</item>
+        <item name="android:textColorHint">?attr/colorOnSecondary</item>
+        <item name="android:textColor">?attr/colorOnPrimary</item>
         <item name="android:textSize">17sp</item>
         <item name="android:fontFamily">@font/open_sans</item>
     </style>
@@ -15,30 +15,30 @@
         <item name="android:layout_height">20dp</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:textSize">15sp</item>
-        <item name="android:textColor">@color/gray_8C</item>
+        <item name="android:textColor">?attr/colorOnSecondary</item>
         <item name="android:fontFamily">@font/open_sans</item>
     </style>
     <style name="acb_entrance">
         <item name="android:layout_height">50dp</item>
         <item name="android:layout_width">0dp</item>
         <item name="android:textSize">17sp</item>
-        <item name="android:textColor">@color/gray_82</item>
+        <item name="android:textColor">?attr/colorOnSecondary</item>
         <item name="android:textAllCaps">false</item>
-        <item name="backgroundTint">@color/gray_BD</item>
+        <item name="backgroundTint">?attr/colorButtonNormal</item>
         <item name="android:fontFamily">@font/open_sans_semibold</item>
     </style>
     <style name="tv_hyper">
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:textSize">15sp</item>
-        <item name="android:textColor">@color/gray_82</item>
+        <item name="android:textColor">?attr/colorOnSecondary</item>
         <item name="android:fontFamily">@font/open_sans</item>
     </style>
     <style name="tv_title">
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:textSize">32sp</item>
-        <item name="android:textColor">@color/gray_8C</item>
+        <item name="android:textColor">?attr/colorOnSecondary</item>
         <item name="android:fontFamily">@font/open_sans_bold</item>
     </style>
     <style name="acb_map">
@@ -50,18 +50,15 @@
         <item name="fontFamily">@font/open_sans</item>
         <item name="android:textSize">15sp</item>
         <item name="android:textColor">@color/white</item>
-        <item name="backgroundTint">@color/red_F4</item>
+        <item name="backgroundTint">?attr/colorOnError</item>
         <item name="android:gravity">center</item>
         <item name="android:visibility">invisible</item>
-    </style>
-    <style name="spinner" parent="@android:style/Widget.TextView.SpinnerItem">
-        <item name="android:padding">5dp</item>
     </style>
     <style name="tv_settings">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textSize">15sp</item>
-        <item name="android:textColor">@color/gray_8C</item>
+        <item name="android:textColor">?attr/colorOnSecondary</item>
         <item name="fontFamily">@font/open_sans</item>
     </style>
 </resources>

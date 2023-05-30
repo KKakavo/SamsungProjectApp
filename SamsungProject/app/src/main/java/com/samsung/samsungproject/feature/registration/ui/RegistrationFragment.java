@@ -2,10 +2,12 @@ package com.samsung.samsungproject.feature.registration.ui;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +31,7 @@ public class RegistrationFragment extends Fragment {
 
     private FragmentRegistrationBinding binding;
     private String LOG_TAG = "RegistrationFragment";
+    Resources.Theme theme;
 
     public RegistrationFragment() {
         // Required empty public constructor
@@ -44,6 +47,7 @@ public class RegistrationFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentRegistrationBinding.inflate(inflater);
+        theme = binding.getRoot().getContext().getTheme();
         binding.regTvLogin.setOnClickListener(v -> Navigation.findNavController(binding.getRoot())
                 .navigate(RegistrationFragmentDirections.actionRegistrationFragmentToLoginFragment()));
         TextWatcher textWatcher = new TextWatcher() {
@@ -59,18 +63,22 @@ public class RegistrationFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
+                TypedValue bt_background = new TypedValue();
+                TypedValue bt_text = new TypedValue();
                 if (binding.regEtEmail.getText().length()>0
                         && binding.regEtPassword.getText().length()>0
                 && binding.regEtNickname.getText().length()>0){
-                    binding.regAcbEnter.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_33));
-                    binding.regAcbEnter.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.gray_F2));
+                    theme.resolveAttribute(com.google.android.material.R.attr.colorOnPrimary, bt_background, true);
+                    theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, bt_text, true);
                     binding.regAcbEnter.setEnabled(true);
                 }
                 else {
-                    binding.regAcbEnter.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_BD));
-                    binding.regAcbEnter.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.gray_82));
+                    theme.resolveAttribute(com.google.android.material.R.attr.colorButtonNormal, bt_background, true);
+                    theme.resolveAttribute(com.google.android.material.R.attr.colorOnSecondary, bt_text, true);
                     binding.regAcbEnter.setEnabled(false);
                 }
+                binding.regAcbEnter.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), bt_background.resourceId));
+                binding.regAcbEnter.setTextColor(ContextCompat.getColorStateList(requireContext(), bt_text.resourceId));
             }
         };
         binding.regEtNickname.addTextChangedListener(textWatcher);

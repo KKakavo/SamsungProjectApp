@@ -9,7 +9,8 @@
     android:layout_marginBottom="10dp"
     android:layout_marginStart="10dp"
     android:layout_marginEnd="10dp"
-    android:background="@drawable/rect_round_5dp">
+    android:background="@drawable/rect_round_5dp"
+    android:backgroundTint="?attr/colorPrimary">
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/gl_place"
         android:layout_width="0dp"
@@ -22,7 +23,7 @@
         android:layout_height="wrap_content"
         android:textSize="15sp"
         android:text="50"
-        android:textColor="@color/gray_33"
+        android:textColor="?attr/colorOnPrimary"
         android:fontFamily="@font/open_sans_bold"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -35,7 +36,7 @@
         android:layout_marginStart="10dp"
         app:layout_constraintTop_toTopOf="@id/tv_place"
         app:layout_constraintBottom_toBottomOf="@id/tv_place"
-        android:textColor="@color/gray_33"
+        android:textColor="?attr/colorOnPrimary"
         android:fontFamily="@font/open_sans"
         android:text="User"/>
     <TextView
@@ -45,7 +46,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tv_place"
         app:layout_constraintBottom_toBottomOf="@id/tv_place"
-        android:textColor="@color/gray_33"
+        android:textColor="?attr/colorOnPrimary"
         android:fontFamily="@font/open_sans"
         android:text="22 023 м2"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

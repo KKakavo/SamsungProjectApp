@@ -9,6 +9,7 @@ import com.samsung.samsungproject.domain.model.User;
 
 import java.util.List;
 
+import okhttp3.Credentials;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -16,8 +17,8 @@ import retrofit2.Response;
 public class LeaderboardViewModel extends ViewModel {
     private final MutableLiveData<List<User>> _users = new MutableLiveData<>();
     public LiveData<List<User>> users = _users;
-    public void load(){
-        UserRepository.getLeaderboard().enqueue(new Callback<List<User>>() {
+    /*public void load(){
+        UserRepository.getLeaderboard(Credentials.basic()).enqueue(new Callback<List<User>>() {
             @Override
             public void onResponse(Call<List<User>> call, Response<List<User>> response) {
                 if (response.isSuccessful()){
@@ -30,5 +31,5 @@ public class LeaderboardViewModel extends ViewModel {
 
             }
         });
-    }
+    }*/
 }

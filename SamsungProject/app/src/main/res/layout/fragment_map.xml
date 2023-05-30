@@ -15,8 +15,8 @@
         android:id="@+id/bt_settings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_settings"
-        android:background="@null"
+        android:background="@drawable/ic_settings"
+        android:backgroundTint="@color/gray_33"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginTop="56dp"
@@ -32,7 +32,7 @@
         app:layout_constraintBottom_toBottomOf="@id/bt_leaderboard"
         android:backgroundTint="?attr/colorPrimary"
         android:src="@drawable/ic_delete"
-        android:tint="?attr/colorSecondary"
+        android:tint="?attr/colorOnPrimary"
         android:visibility="invisible"/>
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/bt_start"
@@ -44,7 +44,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:backgroundTint="?attr/colorPrimary"
         android:src="@drawable/ic_drawing"
-        android:tint="?attr/colorSecondary"
+        android:tint="?attr/colorOnPrimary"
         android:layout_marginBottom="50dp"/>
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/bt_leaderboard"
@@ -56,7 +56,7 @@
         app:layout_constraintBottom_toBottomOf="@id/bt_start"
         app:layout_constraintTop_toTopOf="@id/bt_start"
         android:src="@drawable/ic_union"
-        android:tint="?attr/colorSecondary"
+        android:tint="?attr/colorOnPrimary"
         android:layout_marginEnd="10dp"/>
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/bt_myLocation"
@@ -68,7 +68,7 @@
         app:layout_constraintBottom_toBottomOf="@id/bt_start"
         app:layout_constraintTop_toTopOf="@id/bt_start"
         android:src="@drawable/ic_my_location"
-        android:tint="?attr/colorSecondary"
+        android:tint="?attr/colorOnPrimary"
         android:layout_marginStart="10dp"/>
     <androidx.appcompat.widget.AppCompatSpinner
         android:id="@+id/color_spinner"
@@ -79,5 +79,7 @@
         app:layout_constraintTop_toTopOf="@id/bt_myLocation"
         app:layout_constraintBottom_toBottomOf="@id/bt_myLocation"
         android:layout_marginStart="50dp"
-        android:spinnerMode="dropdown" />
+        android:spinnerMode="dropdown"
+        android:popupBackground="@null"
+        android:layout_marginBottom="20dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

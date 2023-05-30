@@ -12,12 +12,14 @@ import retrofit2.http.Query;
 
 public interface ShapeApi {
     @POST("shape")
-    Call<Shape> saveShape(@Body Shape shape);
+    Call<Shape> saveShape(@Body Shape shape, @Query("score") long score);
     @POST("shape/all")
-    Call<List<Shape>> saveAllShapes(@Body List<Shape> shape);
+    Call<List<Shape>> saveAllShapes(@Body List<Shape> shape, @Query("score") long score);
     @GET("shape/all")
     Call<List<Shape>> getAllShapes();
 
     @GET("shape/recent")
-    Call<List<Shape>> getRecentShapes(@Query("id") long id);
+    Call<List<Shape>> getRecentShapes(@Query("id") long id, @Query("control_sum") long controlSum);
+    @GET("shape/sum")
+    Call<Long> getControlSum();
 }

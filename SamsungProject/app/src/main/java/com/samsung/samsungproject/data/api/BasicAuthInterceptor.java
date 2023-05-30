@@ -1,6 +1,7 @@
 package com.samsung.samsungproject.data.api;
 
 import android.util.Base64;
+import android.util.Log;
 
 import java.io.IOException;
 
@@ -15,13 +16,15 @@ public class BasicAuthInterceptor implements Interceptor {
 
     public BasicAuthInterceptor(String user, String password) {
         this.credentials = Credentials.basic(user, password);
+        Log.w("qwertt", credentials);
     }
 
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
         Request authenticatedRequest = request.newBuilder()
-                .header("Authorization", credentials)
+                .addHeader("Authorization", credentials)
+                .addHeader("Content-Type", "application/json")
                 .build();
         return chain.proceed(authenticatedRequest);
     }

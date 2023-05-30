@@ -2,10 +2,12 @@ package com.samsung.samsungproject.feature.login.ui;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +25,8 @@ import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentLoginBinding;
 import com.samsung.samsungproject.domain.model.User;
 
+import java.util.List;
+
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -33,6 +37,7 @@ public class LoginFragment extends Fragment {
 
     private FragmentLoginBinding binding;
     private String LOG_TAG = "LoginFragment";
+    Resources.Theme theme;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -43,6 +48,7 @@ public class LoginFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentLoginBinding.inflate(inflater);
+        theme = binding.getRoot().getContext().getTheme();
         binding.logTvRegistration.setOnClickListener(v -> Navigation.findNavController(binding.getRoot())
                 .navigate(LoginFragmentDirections.actionLoginFragmentToRegistrationFragment()));
         TextWatcher textWatcher = new TextWatcher() {
@@ -58,17 +64,21 @@ public class LoginFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
+                TypedValue bt_background = new TypedValue();
+                TypedValue bt_text = new TypedValue();
                 if (binding.logEtEmail.getText().length()>0
                         && binding.logEtPassword.getText().length()>0){
-                    binding.logAcbEnter.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_33));
-                    binding.logAcbEnter.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.gray_F2));
+                    theme.resolveAttribute(com.google.android.material.R.attr.colorOnPrimary, bt_background, true);
+                    theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, bt_text, true);
                     binding.logAcbEnter.setEnabled(true);
                 }
                 else {
-                    binding.logAcbEnter.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_BD));
-                    binding.logAcbEnter.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.gray_82));
+                    theme.resolveAttribute(com.google.android.material.R.attr.colorButtonNormal, bt_background, true);
+                    theme.resolveAttribute(com.google.android.material.R.attr.colorOnSecondary, bt_text, true);
                     binding.logAcbEnter.setEnabled(false);
                 }
+                binding.logAcbEnter.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), bt_background.resourceId));
+                binding.logAcbEnter.setTextColor(ContextCompat.getColorStateList(requireContext(), bt_text.resourceId));
             }
         };
         binding.logEtEmail.addTextChangedListener(textWatcher);
@@ -119,7 +129,7 @@ public class LoginFragment extends Fragment {
                             BCrypt.Result result = BCrypt.verifyer().verify(binding.logEtPassword.getText().toString().toCharArray(), user.getPassword().toCharArray());
                             if (result.verified) {
                                 User.saveUserToPreferences(requireActivity(), user.getEmail(), user.getPassword());
-                                RetrofitService.addCredentials(binding.logEtEmail.getText().toString() , binding.logEtPassword.getText().toString());
+
                                 Navigation.findNavController(binding.getRoot())
                                         .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment(user));
                             }
