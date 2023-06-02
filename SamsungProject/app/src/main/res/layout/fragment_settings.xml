@@ -29,13 +29,14 @@
         android:layout_marginTop="40dp"
         android:background="@null"
         android:src="@drawable/ic_arrow_left"
+        android:tint="?attr/colorOnPrimary"
         app:layout_constraintStart_toStartOf="@id/gl_start"
         app:layout_constraintTop_toTopOf="parent" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/settings"
-        android:textColor="@color/gray_33"
+        android:textColor="?attr/colorOnPrimary"
         android:textSize="16sp"
         android:fontFamily="@font/open_sans_semibold"
         app:layout_constraintStart_toStartOf="parent"

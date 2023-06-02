@@ -1,57 +1,15 @@
 package com.samsung.samsungproject.feature.map.presentation;
 
-import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-
-import androidx.annotation.NonNull;
-
-import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.samsung.samsungproject.data.repository.ShapeRepository;
-import com.samsung.samsungproject.data.repository.UserRepository;
-import com.samsung.samsungproject.domain.db.dao.shape.ShapeDao;
-import com.samsung.samsungproject.domain.db.dao.shape.ShapeDaoSqlite;
-import com.samsung.samsungproject.domain.db.dao.user.UserDao;
-import com.samsung.samsungproject.domain.db.dao.user.UserDaoSqlite;
 import com.samsung.samsungproject.domain.model.Point;
 import com.samsung.samsungproject.domain.model.Shape;
 import com.samsung.samsungproject.domain.model.User;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
-public class MapHelper {
+public class MapUtils {
     private final static double DIFF = 0.000001;
-    private final GoogleMap googleMap;
-    private static List<LatLng> polylinePoints;
-    private static List<Polygon> polygonList;
-    private static Polyline polyline;
-
-    public MapHelper(GoogleMap googleMap) {
-        this.googleMap = googleMap;
-        polyline = googleMap.addPolyline(new PolylineOptions().addAll(new ArrayList<>()));
-        polylinePoints = new ArrayList<>();
-        polygonList = new ArrayList<>();
-    }
-
-    public static List<LatLng> getPolylinePoints() {
-        return polylinePoints;
-    }
-
-    public static List<Polygon> getPolygonList() {
-        return polygonList;
-    }
-
-    public static Polyline getPolyline() {
-        return polyline;
-    }
 
     public static LatLng crossingPoint(LatLng AStartPoint, LatLng AEndPoint, LatLng BStartPoint, LatLng BEndPoint) {
         double v = AEndPoint.latitude - AStartPoint.latitude;
@@ -80,12 +38,12 @@ public class MapHelper {
     }
     public static Shape polygonToShape(PolygonOptions polygon, User user){
         return new Shape(user,
-                polygon.getPoints().stream().map(MapHelper::latLngToPoint).collect(Collectors.toList()),
+                polygon.getPoints().stream().map(MapUtils::latLngToPoint).collect(Collectors.toList()),
                 polygon.getFillColor());
     }
     public static PolygonOptions shapeToPolygon(Shape shape){
         return new PolygonOptions()
-                .addAll(shape.getPointList().stream().map(MapHelper::pointToLatLng).collect(Collectors.toList()))
+                .addAll(shape.getPointList().stream().map(MapUtils::pointToLatLng).collect(Collectors.toList()))
                 .fillColor(shape.getColor())
                 .strokeWidth(20)
                 .strokeColor(shape.getColor());

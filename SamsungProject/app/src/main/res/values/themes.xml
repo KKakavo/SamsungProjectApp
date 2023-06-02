@@ -9,5 +9,6 @@
         <item name="colorOnError">@color/red_F4</item>
         <item name="colorButtonNormal">@color/gray_BD</item>
         <item name="colorAccent">@color/white</item>
+        <item name="colorTertiary">@color/gray_e3</item>
     </style>
 </resources>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="et_base">
-        <item name="android:backgroundTint">@color/gray_e3</item>
+        <item name="android:backgroundTint">?attr/colorTertiary</item>
         <item name="android:background">@drawable/rect_round_10dp</item>
         <item name="android:layout_height">40dp</item>
         <item name="android:layout_width">0dp</item>
