@@ -246,6 +246,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 try {
                     List<Shape> shapes = ShapeRepository.saveAllShapes(shapeList, score).execute().body();
                     ShapeRepository.controlSum += shapes.size();
+                    System.out.println(shapes.size());
                     shapes.forEach(shape -> shapeDao.insert(shape));
                     handler.post(() -> startButtonOff());
                 } catch (IOException e) {
