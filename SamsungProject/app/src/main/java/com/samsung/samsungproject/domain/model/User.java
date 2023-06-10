@@ -36,9 +36,6 @@ public class User implements Serializable {
     public static String getEmailFromPreferences(FragmentActivity activity){
         return activity.getPreferences(Context.MODE_PRIVATE).getString(EMAIL_KEY, null);
     }
-    public static String getPasswordFromPreferences(FragmentActivity activity){
-        return activity.getPreferences(Context.MODE_PRIVATE).getString(PASSWORD_KEY, null);
-    }
     public static void saveUserToPreferences(FragmentActivity activity, String email, String password){
         SharedPreferences.Editor editor = activity.getPreferences(Context.MODE_PRIVATE).edit();
         editor.putString(EMAIL_KEY, email);

@@ -13,7 +13,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.moshi.MoshiConverterFactory;
 
 public class RetrofitService {
-    private static final String BASE_URL = "http://195.2.67.53:8080";
+    //private static final String BASE_URL = "http://195.2.67.53:8080";
+    private static final String BASE_URL = "http://192.168.1.251:8080";
     private static Retrofit retrofit;
     private static Retrofit create(){
         return new Retrofit.Builder()
@@ -25,13 +26,5 @@ public class RetrofitService {
     public static Retrofit getInstance(){
         if(retrofit == null) retrofit = create();
         return retrofit;
-    }
-    public static void addCredentials(String user, String password){
-        /*OkHttpClient client = new OkHttpClient.Builder().addInterceptor(new BasicAuthInterceptor(user, password)).build();
-        retrofit = new Retrofit.Builder()
-                .addConverterFactory(MoshiConverterFactory.create())
-                .client(client)
-                .baseUrl(BASE_URL)
-                .build();*/
     }
 }

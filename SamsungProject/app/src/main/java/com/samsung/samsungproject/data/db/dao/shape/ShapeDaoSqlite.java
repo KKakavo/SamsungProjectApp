@@ -1,20 +1,18 @@
-package com.samsung.samsungproject.domain.db.dao.shape;
+package com.samsung.samsungproject.data.db.dao.shape;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
-import com.samsung.samsungproject.domain.db.AppDbOpenHelper;
-import com.samsung.samsungproject.domain.db.AppReaderContract;
-import com.samsung.samsungproject.domain.db.dao.point.PointDao;
-import com.samsung.samsungproject.domain.db.dao.point.PointDaoSqlite;
-import com.samsung.samsungproject.domain.db.dao.user.UserDao;
-import com.samsung.samsungproject.domain.db.dao.user.UserDaoSqlite;
+import com.samsung.samsungproject.data.db.dao.point.PointDao;
+import com.samsung.samsungproject.data.db.dao.point.PointDaoSqlite;
+import com.samsung.samsungproject.data.db.AppDbOpenHelper;
+import com.samsung.samsungproject.data.db.AppReaderContract;
+import com.samsung.samsungproject.data.db.dao.user.UserDao;
+import com.samsung.samsungproject.data.db.dao.user.UserDaoSqlite;
 import com.samsung.samsungproject.domain.model.Shape;
-import com.samsung.samsungproject.domain.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +20,16 @@ import java.util.List;
 public class ShapeDaoSqlite implements ShapeDao{
     private final AppDbOpenHelper openHelper;
     private final PointDao pointDao;
+    private static ShapeDao instance;
 
     public ShapeDaoSqlite(Context context) {
         this.openHelper = new AppDbOpenHelper(context);
         pointDao = new PointDaoSqlite(context);
+    }
+    public static ShapeDao getInstance(Context context){
+        if(instance == null)
+            instance = new ShapeDaoSqlite(context);
+        return instance;
     }
 
     @Override
@@ -40,6 +44,11 @@ public class ShapeDaoSqlite implements ShapeDao{
         database.close();
         shape.getPointList().forEach(point -> pointDao.insert(point, index));
         return index;
+    }
+
+    @Override
+    public void insertAll(List<Shape> shapeList) {
+        shapeList.forEach(this::insert);
     }
 
     @Override

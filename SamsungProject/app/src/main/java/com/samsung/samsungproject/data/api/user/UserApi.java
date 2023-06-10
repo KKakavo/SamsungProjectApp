@@ -24,7 +24,7 @@ public interface UserApi {
     Call<User> getUserById(@Path("id") long id);
 
     @GET("user/leaderboard")
-    Call<List<User>> getLeaderBoard();
+    Call<List<User>> getLeaderboard();
     @PATCH("user/{id}/score")
     Call<Void> updateUserScoreById(@Path("id") long id, @Query("score") long score);
 }

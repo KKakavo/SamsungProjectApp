@@ -1,4 +1,4 @@
-package com.samsung.samsungproject.domain.db;
+package com.samsung.samsungproject.data.db;
 
 public class AppReaderContract {
     public AppReaderContract() {

@@ -1,4 +1,4 @@
-package com.samsung.samsungproject.domain.db.dao.point;
+package com.samsung.samsungproject.data.db.dao.point;
 
 import com.samsung.samsungproject.domain.model.Point;
 import com.samsung.samsungproject.domain.model.Shape;

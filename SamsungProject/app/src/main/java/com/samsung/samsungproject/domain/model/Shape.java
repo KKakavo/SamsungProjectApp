@@ -5,9 +5,9 @@ import java.util.List;
 
 
 public class Shape {
-    private final User user;
-    private final int color;
-    private final List<Point> pointList;
+    private User user;
+    private int color;
+    private List<Point> pointList;
 
     public Shape(User user, List<Point> pointList, int color) {
         this.user = user;
@@ -17,6 +17,9 @@ public class Shape {
 
     public User getUser() {
         return user;
+    }
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public List<Point> getPointList() {
@@ -35,4 +38,5 @@ public class Shape {
                 ", color=" + color +
                 '}';
     }
+
 }

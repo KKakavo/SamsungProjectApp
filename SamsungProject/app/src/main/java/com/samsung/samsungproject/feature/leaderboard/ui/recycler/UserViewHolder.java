@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.samsung.samsungproject.R;
 import com.samsung.samsungproject.databinding.LeaderboardItemBinding;
 import com.samsung.samsungproject.domain.model.User;
+import com.samsung.samsungproject.feature.leaderboard.presentation.LeaderboardUtils;
+
 import android.content.res.Resources.Theme;
 
 public class UserViewHolder extends RecyclerView.ViewHolder {
@@ -28,7 +30,7 @@ public class UserViewHolder extends RecyclerView.ViewHolder {
         Theme theme = binding.getRoot().getContext().getTheme();
         binding.tvPlace.setText(String.valueOf(position + 2));
         binding.tvNickname.setText("@" + user.getNickname());
-        binding.tvScore.setText(format(user.getScore()) + " м2");
+        binding.tvScore.setText(LeaderboardUtils.format(user.getScore()) + " м2");
         TypedValue typedValue = new TypedValue();
         if (user.getEmail().equals(authorizedUser.getEmail())) {
             theme.resolveAttribute(com.google.android.material.R.attr.colorAccent, typedValue, true);
@@ -48,17 +50,6 @@ public class UserViewHolder extends RecyclerView.ViewHolder {
                 binding.tvNickname.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.orange));
                 break;
         }
-    }
-
-    private String format(long number){
-        String[] chars = String.valueOf(number).split("");
-        StringBuilder builder = new StringBuilder();
-        for(int i = chars.length - 1; i >= 0; i--){
-            if((chars.length - i - 1) % 3 == 0)
-                builder.append(" ");
-            builder.append(chars[i]);
-        }
-        return builder.reverse().toString();
     }
 
 }

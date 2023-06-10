@@ -16,12 +16,15 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -48,39 +51,32 @@ import com.google.maps.android.SphericalUtil;
 import com.samsung.samsungproject.R;
 import com.samsung.samsungproject.data.repository.ShapeRepository;
 import com.samsung.samsungproject.databinding.FragmentMapBinding;
-import com.samsung.samsungproject.domain.db.dao.shape.ShapeDao;
-import com.samsung.samsungproject.domain.db.dao.shape.ShapeDaoSqlite;
+import com.samsung.samsungproject.data.db.dao.shape.ShapeDao;
+import com.samsung.samsungproject.data.db.dao.shape.ShapeDaoSqlite;
 import com.samsung.samsungproject.domain.model.Shape;
 import com.samsung.samsungproject.domain.model.User;
+import com.samsung.samsungproject.feature.map.presentation.MapStatus;
 import com.samsung.samsungproject.feature.map.presentation.MapUtils;
+import com.samsung.samsungproject.feature.map.presentation.MapViewModel;
 import com.samsung.samsungproject.feature.map.ui.spinner.ColorAdapter;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private FragmentMapBinding binding;
+    private MapViewModel viewModel;
     Resources.Theme theme;
     private GoogleMap googleMap;
-    private List<LatLng> polylinePoints = new ArrayList<>();
-    private List<PolygonOptions> polygonOptionsList = new ArrayList<>();
-    private List<Polygon> polygonList = new ArrayList<>();
+    private List<Polygon> drawedPolygonList = new ArrayList<>();
     private final Handler handler = new Handler();
     private final String LOG_TAG = "MapFragment";
-    private LatLng currentLocation;
-    private boolean isPaintingActive = false;
-    private boolean isCameraMoving = false;
     private User authorizedUser;
-    private ShapeDao shapeDao;
+    private float zIndex = 0;
     private final Integer[] spinner_items = {R.color.red_EB, R.color.orange, R.color.yellow,
             R.color.green_21, R.color.green_6F, R.color.blue_2F, R.color.blue_56,
             R.color.purple, R.color.gray_33, R.color.gray_BD, R.color.white};
@@ -91,11 +87,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         super.onCreate(savedInstanceState);
         MapFragmentArgs args = MapFragmentArgs.fromBundle(requireArguments());
         authorizedUser = args.getUser();
-        shapeDao = new ShapeDaoSqlite(requireContext());
+        viewModel = new ViewModelProvider(this).get(MapViewModel.class);
+        viewModel.location.observe(this, this::renderCamera);
+        viewModel.cachedPolygonList.observe(this, this::renderCachedPolygon);
+        viewModel.currentPathPoints.observe(this, this::renderCurrentPath);
+        viewModel.newPolygonPoints.observe(this, this::renderNewPolygon);
+        viewModel.status.observe(this, this::renderStatus);
         if (!isLocationPermissionGranted())
             launchLocationPermissionRequest();
-        else
-            enableFusedLocationListener();
     }
 
 
@@ -107,40 +106,32 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.fr_google_map);
         supportMapFragment.getMapAsync(this);
-        if (isPaintingActive)
-            startButtonOn();
-        if (isCameraMoving)
-            locationButtonOn();
         binding.btSettings.setOnClickListener(v -> Navigation.findNavController(binding.getRoot()).navigate(MapFragmentDirections.actionMapFragmentToSettingsFragment()));
         binding.btLeaderboard.setOnClickListener(v -> Navigation.findNavController(binding.getRoot())
                 .navigate(MapFragmentDirections.actionMapFragmentToLeaderboardFragment(authorizedUser)));
-        binding.btMyLocation.setOnClickListener(v -> {
+        binding.btMyLocation.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isGeoEnabled()) {
-                if (currentLocation != null) {
-                    isCameraMoving = !isCameraMoving;
-                    if (isCameraMoving) {
-                        locationButtonOn();
-                    } else {
-                        locationButtonOff();
-                    }
-                }
+                if (isChecked) viewModel.enableCamera();
+                else viewModel.disableCamera();
             } else {
                 startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                binding.btMyLocation.setChecked(false);
+                viewModel.disableCamera();
             }
         });
-        binding.btStart.setOnClickListener(v -> {
-            if (!isPaintingActive) {
-                startButtonOn();
-                isPaintingActive = !isPaintingActive;
+        binding.btStart.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                viewModel.enableDrawing();
+                binding.btDelete.setVisibility(View.VISIBLE);
             } else {
-                saveAllShapes();
+                viewModel.saveAllPolygons(authorizedUser);
+                binding.btDelete.setVisibility(View.INVISIBLE);
             }
         });
         binding.btDelete.setOnClickListener(v -> {
-            polylinePoints.clear();
             currentPath.remove();
-            polygonList.forEach(Polygon::remove);
-            polygonOptionsList.clear();
+            drawedPolygonList.forEach(Polygon::remove);
+            viewModel.clearSession();
         });
         ColorAdapter adapter = new ColorAdapter(requireContext(), R.layout.spinner_item, Arrays.asList(spinner_items));
         binding.colorSpinner.setAdapter(adapter);
@@ -158,20 +149,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
         googleMap.getUiSettings().setMyLocationButtonEnabled(false);
-
-        new Thread(() -> {
-            ShapeRepository.controlSum = shapeDao.getSize();
-            List<Shape> dbShapes = shapeDao.findAll();
-            dbShapes.forEach(shape -> {
-                PolygonOptions polygonOptions = MapUtils.shapeToPolygon(shape);
-                handler.post(() -> googleMap.addPolygon(polygonOptions));
-            });
-        }).start();
-
         if (isLocationPermissionGranted())
             enableMyLocation();
-        if (currentPath == null)
+        if (currentPath == null) {
             currentPath = googleMap.addPolyline(new PolylineOptions().width(0));
+            viewModel.getAllPolygons();
+        }
         googleMap.setMapStyle(
                 MapStyleOptions.loadRawResourceStyle(
                         requireContext(), R.raw.style_json));
@@ -179,19 +162,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                new Thread(() -> {
-                    try {
-                        List<Shape> shapes = ShapeRepository.getRecentShapes(shapeDao.getSize()).execute().body();
-                        ShapeRepository.controlSum += shapes.size();
-                        shapes.forEach(shapeDao::insert);
-                        List<PolygonOptions> optionsList = shapes.stream().map(MapUtils::shapeToPolygon).collect(Collectors.toList());
-                        handler.post(() -> optionsList.forEach(googleMap::addPolygon));
-                    } catch (IOException e) {
-                        Log.e(LOG_TAG, e.getMessage());
-                    } finally {
-                        handler.postDelayed(this, 5000);
-                    }
-                }).start();
+                viewModel.getRecentPolygons();
+                handler.postDelayed(this, 5000);
             }
         }, 1000);
     }
@@ -202,14 +174,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 result -> {
                     if (result) {
                         enableMyLocation();
-                        enableFusedLocationListener();
                     } else
                         shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION);
                 }).launch(Manifest.permission.ACCESS_FINE_LOCATION);
     }
 
     private boolean isLocationPermissionGranted() {
-
         return ContextCompat.checkSelfPermission(requireContext(),
                 Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(requireContext(),
@@ -219,7 +189,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private void enableMyLocation() {
         try {
-            googleMap.setMyLocationEnabled(true);
+            if(googleMap != null)
+                googleMap.setMyLocationEnabled(true);
         } catch (SecurityException e) {
             Log.e(LOG_TAG, e.getMessage());
         }
@@ -232,132 +203,77 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         return isGPSEnabled && isNetworkEnabled;
     }
 
-    private void saveAllShapes() {
-        Thread thread = new Thread(() -> {
-            List<Shape> shapeList = new ArrayList<>();
-            long score = authorizedUser.getScore();
-            for (PolygonOptions polygon : polygonOptionsList) {
-                PolygonOptions polygonOptions = new PolygonOptions().addAll(polygon.getPoints())
-                        .fillColor(polygon.getFillColor());
-                shapeList.add(MapUtils.polygonToShape(polygonOptions, authorizedUser));
-                score += Math.round(SphericalUtil.computeArea(polygon.getPoints()));
-            }
-            if (shapeList.size() > 0) {
-                try {
-                    List<Shape> shapes = ShapeRepository.saveAllShapes(shapeList, score).execute().body();
-                    ShapeRepository.controlSum += shapes.size();
-                    System.out.println(shapes.size());
-                    shapes.forEach(shape -> shapeDao.insert(shape));
-                    handler.post(() -> startButtonOff());
-                } catch (IOException e) {
-                    handler.post(() -> Toast.makeText(requireContext(), "Сервер не отвечает", Toast.LENGTH_LONG).show());
-                    Log.d(LOG_TAG, "failure");
-                }
-            } else {
-                handler.post(() -> startButtonOff());
-            }
-        });
-        thread.start();
-    }
 
-    private void enableFusedLocationListener() {
-        FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
-        LocationRequest locationRequest = new LocationRequest
-                .Builder(Priority.PRIORITY_HIGH_ACCURACY, 500)
-                .setGranularity(Granularity.GRANULARITY_FINE)
-                .setWaitForAccurateLocation(true)
-                .build();
-        LocationCallback locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(@NonNull LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-                for (Location location : locationResult.getLocations()) {
-                    LatLng newPoint = new LatLng(location.getLatitude(), location.getLongitude());
-                    currentLocation = newPoint;
-                    if (isPaintingActive) {
-                        if (polylinePoints.size() >= 2) {
-                            for (int i = 0; i < polylinePoints.size() - 2; i++) {
-                                LatLng crossingPoint = MapUtils.crossingPoint(polylinePoints.get(polylinePoints.size() - 1), newPoint,
-                                        polylinePoints.get(i), polylinePoints.get(i + 1));
-                                if (crossingPoint != null) {
-                                    List<LatLng> polygonPoints = new ArrayList<>(polylinePoints.subList(i + 1, polylinePoints.size() - 1));
-                                    polygonPoints.add(polygonPoints.get(0));
-                                    polylinePoints = polylinePoints.subList(0, i);
-                                    PolygonOptions options = new PolygonOptions()
-                                            .addAll(PolyUtil.simplify(polygonPoints, polygonPoints.size() / 200.0))
-                                            .strokeWidth(20)
-                                            .strokeColor(requireContext().getColor((int) binding.colorSpinner.getSelectedItem()))
-                                            .fillColor(requireContext().getColor((int) binding.colorSpinner.getSelectedItem()));
-                                    polygonList.add(googleMap.addPolygon(options));
-                                    polygonOptionsList.add(options);
-                                    polylinePoints.add(crossingPoint);
-                                }
-                            }
-                        }
-
-                        polylinePoints.add(new LatLng(location.getLatitude(), location.getLongitude()));
-                        currentPath.remove();
-                        currentPath = googleMap.addPolyline(new PolylineOptions()
-                                .addAll(polylinePoints)
-                                .width(20)
-                                .color(requireContext().getColor((int) binding.colorSpinner.getSelectedItem()))
-                                .startCap(new RoundCap())
-                                .endCap(new RoundCap()));
-                    }
-                    if (isCameraMoving) {
-                        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentLocation, 18);
-                        googleMap.animateCamera(cameraUpdate);
-                    }
-                }
-
-            }
-
-        };
-        try {
-            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-            Log.w(LOG_TAG, "fusedLocationProviderClient enabled");
-        } catch (SecurityException e) {
-            Log.e(LOG_TAG, e.getMessage());
+    private void renderCamera(LatLng latLng) {
+        if(googleMap != null) {
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 18);
+            googleMap.animateCamera(cameraUpdate);
         }
     }
 
-    private void startButtonOn() {
-        binding.btStart.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.green));
-        binding.btStart.setImageTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_F2));
-        binding.btStart.setImageResource(R.drawable.ic_done);
-        binding.btDelete.setVisibility(View.VISIBLE);
+    private void renderCachedPolygon(List<PolygonOptions> polygonOptions) {
+        if(googleMap != null) {
+            polygonOptions.forEach(options -> options.zIndex(zIndex++));
+            polygonOptions.forEach(googleMap::addPolygon);
+        }
     }
 
-    private void startButtonOff() {
-        TypedValue background = new TypedValue();
-        TypedValue icon = new TypedValue();
-        theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, background, true);
-        theme.resolveAttribute(com.google.android.material.R.attr.colorOnPrimary, icon, true);
-        binding.btStart.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), background.resourceId));
-        binding.btStart.setImageTintList(ContextCompat.getColorStateList(requireContext(), icon.resourceId));
-        binding.btStart.setImageResource(R.drawable.ic_drawing);
-        binding.btDelete.setVisibility(View.INVISIBLE);
-        polylinePoints.clear();
-        currentPath.remove();
-        polygonOptionsList.clear();
-        polygonList.clear();
-        isPaintingActive = !isPaintingActive;
+    private void renderCurrentPath(List<LatLng> points) {
+        if(googleMap != null) {
+            Polyline polyline = googleMap.addPolyline(new PolylineOptions()
+                    .addAll(points)
+                    .width(20)
+                    .color(requireContext().getColor((int) binding.colorSpinner.getSelectedItem()))
+                    .startCap(new RoundCap())
+                    .endCap(new RoundCap())
+                    .zIndex(Float.MAX_VALUE));
+            currentPath.remove();
+            currentPath = polyline;
+        }
     }
 
-    private void locationButtonOn() {
-        binding.btMyLocation.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.green));
-        binding.btMyLocation.setImageTintList(ContextCompat.getColorStateList(requireContext(), R.color.gray_F2));
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentLocation, 18);
-        googleMap.animateCamera(cameraUpdate);
+    private void renderStatus(MapStatus status) {
+        switch (status) {
+            case SUCCESS:
+                viewModel.disableDrawing();
+                viewModel.clearSession();
+                drawedPolygonList = new ArrayList<>();
+                break;
+            case FAILURE:
+                binding.btStart.setChecked(true);
+                Toast.makeText(requireContext(), "Сервер не отвечает", Toast.LENGTH_LONG).show();
+                break;
+            case LOADING:
+                break;
+        }
     }
 
-    private void locationButtonOff() {
-        Resources.Theme theme = binding.getRoot().getContext().getTheme();
-        TypedValue background = new TypedValue();
-        TypedValue icon = new TypedValue();
-        theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, background, true);
-        theme.resolveAttribute(com.google.android.material.R.attr.colorOnPrimary, icon, true);
-        binding.btMyLocation.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), background.resourceId));
-        binding.btMyLocation.setImageTintList(ContextCompat.getColorStateList(requireContext(), icon.resourceId));
+    private void renderNewPolygon(List<LatLng> points) {
+        if(googleMap != null) {
+            PolygonOptions polygonOptions = new PolygonOptions()
+                    .addAll(PolyUtil.simplify(points, points.size() / 200.0))
+                    .strokeWidth(20)
+                    .strokeColor(requireContext().getColor((int) binding.colorSpinner.getSelectedItem()))
+                    .fillColor(requireContext().getColor((int) binding.colorSpinner.getSelectedItem()))
+                    .zIndex(zIndex++);
+            drawedPolygonList.add(googleMap.addPolygon(polygonOptions));
+            viewModel.polygonOptionsList.add(polygonOptions);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("isLocationEnabled", binding.btMyLocation.isChecked());
+        outState.putBoolean("isDrawEnabled", binding.btStart.isChecked());
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (savedInstanceState != null) {
+            binding.btStart.setChecked(savedInstanceState.getBoolean("isDrawEnabled"));
+            binding.btMyLocation.setChecked(savedInstanceState.getBoolean("isLocationEnabled"));
+        }
     }
 }

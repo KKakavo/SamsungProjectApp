@@ -1,13 +1,12 @@
-package com.samsung.samsungproject.domain.db.dao.user;
+package com.samsung.samsungproject.data.db.dao.user;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.samsung.samsungproject.domain.db.AppDbOpenHelper;
-import com.samsung.samsungproject.domain.db.AppReaderContract;
-import com.samsung.samsungproject.domain.db.dao.user.UserDao;
+import com.samsung.samsungproject.data.db.AppDbOpenHelper;
+import com.samsung.samsungproject.data.db.AppReaderContract;
 import com.samsung.samsungproject.domain.model.User;
 
 import java.util.ArrayList;
@@ -15,9 +14,15 @@ import java.util.List;
 
 public class UserDaoSqlite implements UserDao {
     private final AppDbOpenHelper openHelper;
+    private static UserDao instance;
 
-    public UserDaoSqlite(Context context) {
+    private UserDaoSqlite(Context context) {
         this.openHelper = new AppDbOpenHelper(context);
+    }
+    public static UserDao getInstance(Context context){
+        if(instance == null)
+            instance = new UserDaoSqlite(context);
+        return instance;
     }
 
     @Override
@@ -41,6 +46,11 @@ public class UserDaoSqlite implements UserDao {
         );
         database.close();
         return index;
+    }
+
+    @Override
+    public void insertAll(List<User> userList) {
+        userList.forEach(this::insert);
     }
 
     @Override

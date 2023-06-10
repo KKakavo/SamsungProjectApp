@@ -1,13 +1,12 @@
-package com.samsung.samsungproject.domain.db.dao.point;
+package com.samsung.samsungproject.data.db.dao.point;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
-import com.samsung.samsungproject.domain.db.AppDbOpenHelper;
-import com.samsung.samsungproject.domain.db.AppReaderContract;
+import com.samsung.samsungproject.data.db.AppDbOpenHelper;
+import com.samsung.samsungproject.data.db.AppReaderContract;
 import com.samsung.samsungproject.domain.model.Point;
 
 import java.util.ArrayList;

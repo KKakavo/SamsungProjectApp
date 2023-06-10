@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.samsung.samsungproject.R;
@@ -24,6 +25,8 @@ import com.samsung.samsungproject.data.api.RetrofitService;
 import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentLoginBinding;
 import com.samsung.samsungproject.domain.model.User;
+import com.samsung.samsungproject.feature.login.presentation.LoginStatus;
+import com.samsung.samsungproject.feature.login.presentation.LoginViewModel;
 
 import java.util.List;
 
@@ -34,15 +37,19 @@ import retrofit2.Response;
 
 public class LoginFragment extends Fragment {
 
-
+    private LoginViewModel viewModel;
     private FragmentLoginBinding binding;
-    private String LOG_TAG = "LoginFragment";
     Resources.Theme theme;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
+        viewModel.user.observe(this, this::renderUser);
+        viewModel.status.observe(this, this::renderStatus);
     }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -83,81 +90,65 @@ public class LoginFragment extends Fragment {
         };
         binding.logEtEmail.addTextChangedListener(textWatcher);
         binding.logEtPassword.addTextChangedListener(textWatcher);
-        String email = User.getEmailFromPreferences(requireActivity());
-        if(email != null){
-            binding.logEtEmail.setEnabled(false);
-            binding.logEtPassword.setEnabled(false);
-            binding.logAcbEnter.setEnabled(false);
-            UserRepository.getUserByEmail(email)
-                    .enqueue(new Callback<User>() {
-                        @Override
-                        public void onResponse(Call<User> call, Response<User> response) {
-                            if (response.isSuccessful()) {
-                                User user = response.body();
-                                if (User.getPasswordFromPreferences(requireActivity()).equals(user.getPassword())) {
-                                    RetrofitService.addCredentials(user.getEmail(), user.getPassword());
-                                    Navigation.findNavController(binding.getRoot())
-                                            .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment(user));
-                                }
-                            }
-                            binding.logEtEmail.setEnabled(true);
-                            binding.logEtPassword.setEnabled(true);
-                            binding.logAcbEnter.setEnabled(true);
-                        }
-
-                        @Override
-                        public void onFailure(Call<User> call, Throwable t) {
-                            Log.e(LOG_TAG, t.getMessage());
-                            binding.tvError.setText(R.string.server_not_responding);
-                            binding.tvError.setVisibility(View.VISIBLE);
-                            binding.logEtEmail.setEnabled(true);
-                            binding.logEtPassword.setEnabled(true);
-                            binding.logAcbEnter.setEnabled(true);
-                        }
-                    });
+        if(savedInstanceState == null){
+            String email = User.getEmailFromPreferences(requireActivity());
+            if(email != null)
+                binding.logEtEmail.setText(email);
         }
         binding.logAcbEnter.setOnClickListener(v -> {
             binding.logEtEmail.setEnabled(false);
             binding.logEtPassword.setEnabled(false);
             binding.logAcbEnter.setEnabled(false);
-            UserRepository.getUserByEmail(binding.logEtEmail.getText().toString())
-                .enqueue(new Callback<User>() {
-                    @Override
-                    public void onResponse(Call<User> call, Response<User> response) {
-                        if (response.isSuccessful()) {
-                            User user = response.body();
-                            BCrypt.Result result = BCrypt.verifyer().verify(binding.logEtPassword.getText().toString().toCharArray(), user.getPassword().toCharArray());
-                            if (result.verified) {
-                                User.saveUserToPreferences(requireActivity(), user.getEmail(), user.getPassword());
-
-                                Navigation.findNavController(binding.getRoot())
-                                        .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment(user));
-                            }
-                            else {
-                                binding.tvError.setText(R.string.wrong_password);
-                                binding.tvError.setVisibility(View.VISIBLE);
-                            }
-                        } else if (response.code() == 400){
-                            binding.tvError.setText(R.string.wrong_email);
-                            binding.tvError.setVisibility(View.VISIBLE);
-                        }
-                        binding.logEtEmail.setEnabled(true);
-                        binding.logEtPassword.setEnabled(true);
-                        binding.logAcbEnter.setEnabled(true);
-                    }
-
-                    @Override
-                    public void onFailure(Call<User> call, Throwable t) {
-                        Log.e(LOG_TAG, t.getMessage());
-                        binding.tvError.setText(R.string.server_not_responding);
-                        binding.tvError.setVisibility(View.VISIBLE);
-                        binding.logEtEmail.setEnabled(true);
-                        binding.logEtPassword.setEnabled(true);
-                        binding.logAcbEnter.setEnabled(true);
-                    }
-                });
+            binding.logTvRegistration.setEnabled(false);
+            viewModel.login(binding.logEtEmail.getText().toString(),
+                    binding.logEtPassword.getText().toString());
         });
         return binding.getRoot();
+    }
+    private void renderUser(User user) {
+        User.saveUserToPreferences(requireActivity(), user.getEmail(), user.getPassword());
+        Navigation.findNavController(binding.getRoot())
+                .navigate(LoginFragmentDirections.actionLoginFragmentToMapFragment(user));
+    }
+    private void renderStatus(LoginStatus status) {
+        switch (status){
+            case SUCCESS:
+                binding.tvError.setVisibility(View.INVISIBLE);
+                binding.progressBar.setVisibility(View.INVISIBLE);
+                break;
+            case LOADING:
+                binding.tvError.setVisibility(View.INVISIBLE);
+                binding.progressBar.setVisibility(View.VISIBLE);
+                binding.progressBar.setEnabled(true);
+                break;
+            case SERVER_NOT_RESPONDING:
+                binding.tvError.setText(R.string.server_not_responding);
+                binding.tvError.setVisibility(View.VISIBLE);
+                binding.progressBar.setVisibility(View.INVISIBLE);
+                binding.logEtEmail.setEnabled(true);
+                binding.logEtPassword.setEnabled(true);
+                binding.logAcbEnter.setEnabled(true);
+                binding.logTvRegistration.setEnabled(true);
+                break;
+            case WRONG_EMAIL:
+                binding.tvError.setText(R.string.wrong_email);
+                binding.tvError.setVisibility(View.VISIBLE);
+                binding.progressBar.setVisibility(View.INVISIBLE);
+                binding.logEtEmail.setEnabled(true);
+                binding.logEtPassword.setEnabled(true);
+                binding.logAcbEnter.setEnabled(true);
+                binding.logTvRegistration.setEnabled(true);
+                break;
+            case WRONG_PASSWORD:
+                binding.tvError.setText(R.string.wrong_password);
+                binding.tvError.setVisibility(View.VISIBLE);
+                binding.progressBar.setVisibility(View.INVISIBLE);
+                binding.logEtEmail.setEnabled(true);
+                binding.logEtPassword.setEnabled(true);
+                binding.logAcbEnter.setEnabled(true);
+                binding.logTvRegistration.setEnabled(true);
+                break;
+        }
     }
     @Override
     public void onDestroy() {
