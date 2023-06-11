@@ -24,6 +24,7 @@ import com.samsung.samsungproject.domain.model.User;
 import com.samsung.samsungproject.feature.map.presentation.MapUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -73,6 +74,9 @@ public class ShapeRepository {
                     Result result = new Result.Error<>(e, null);
                     handler.post(() -> callback.onComplete(result));
                 }
+            } else {
+                Result result = new Result.Success<>(new ArrayList<>());
+                handler.post(() -> callback.onComplete(result));
             }
         });
     }

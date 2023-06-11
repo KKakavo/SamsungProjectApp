@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.samsung.samsungproject.R;
+import com.samsung.samsungproject.data.db.AppReaderContract;
 import com.samsung.samsungproject.data.repository.ShapeRepository;
 import com.samsung.samsungproject.domain.model.Shape;
 import com.samsung.samsungproject.domain.model.User;

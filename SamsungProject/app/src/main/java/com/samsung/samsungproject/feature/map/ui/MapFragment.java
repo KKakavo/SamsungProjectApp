@@ -124,6 +124,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 viewModel.enableDrawing();
                 binding.btDelete.setVisibility(View.VISIBLE);
             } else {
+                viewModel.disableDrawing();
                 viewModel.saveAllPolygons(authorizedUser);
                 binding.btDelete.setVisibility(View.INVISIBLE);
             }
@@ -131,6 +132,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         binding.btDelete.setOnClickListener(v -> {
             currentPath.remove();
             drawedPolygonList.forEach(Polygon::remove);
+            drawedPolygonList.clear();
             viewModel.clearSession();
         });
         ColorAdapter adapter = new ColorAdapter(requireContext(), R.layout.spinner_item, Arrays.asList(spinner_items));
@@ -235,12 +237,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private void renderStatus(MapStatus status) {
         switch (status) {
             case SUCCESS:
-                viewModel.disableDrawing();
                 viewModel.clearSession();
-                drawedPolygonList = new ArrayList<>();
+                currentPath.remove();
+                drawedPolygonList.clear();
                 break;
             case FAILURE:
                 binding.btStart.setChecked(true);
+                viewModel.enableDrawing();
                 Toast.makeText(requireContext(), "Сервер не отвечает", Toast.LENGTH_LONG).show();
                 break;
             case LOADING:
