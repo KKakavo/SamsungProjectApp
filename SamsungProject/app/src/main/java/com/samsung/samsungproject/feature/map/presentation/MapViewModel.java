@@ -70,6 +70,7 @@ public class MapViewModel extends AndroidViewModel {
                                     currentPath.get(i), currentPath.get(i + 1));
                             if (crossingPoint != null) {
                                 List<LatLng> polygonPoints = new ArrayList<>(currentPath.subList(i + 1, currentPath.size() - 1));
+                                currentPath = new ArrayList<>(currentPath.subList(0, i));
                                 polygonPoints.add(polygonPoints.get(0));
                                 _newPolygonPoints.setValue(polygonPoints);
                                 currentPath.add(crossingPoint);
