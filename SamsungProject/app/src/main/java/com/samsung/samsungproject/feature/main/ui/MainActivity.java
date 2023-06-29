@@ -15,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getApplicationContext().deleteDatabase(AppReaderContract.DATABASE_NAME);
+        //getApplicationContext().deleteDatabase(AppReaderContract.DATABASE_NAME);
         setTheme(R.style.Theme_SamsungProject);
     }
 
