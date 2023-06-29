@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.samsung.samsungproject.R;
 import com.samsung.samsungproject.databinding.FragmentLeaderboardBinding;
 import com.samsung.samsungproject.domain.model.User;
@@ -17,6 +18,7 @@ import com.samsung.samsungproject.feature.leaderboard.presentation.LeaderboardSt
 import com.samsung.samsungproject.feature.leaderboard.presentation.LeaderboardUtils;
 import com.samsung.samsungproject.feature.leaderboard.presentation.LeaderboardViewModel;
 import com.samsung.samsungproject.feature.leaderboard.ui.recycler.UserAdapter;
+import com.samsung.samsungproject.feature.leaderboard.ui.recycler.UserClickListener;
 import com.samsung.samsungproject.feature.map.presentation.MapViewModel;
 
 import java.util.List;
@@ -30,6 +32,7 @@ public class LeaderboardFragment extends Fragment {
     private MapViewModel sharedViewModel;
     private User authorizedUser;
     private LeaderboardFragmentArgs args;
+    private UserClickListener userClickListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,12 +50,15 @@ public class LeaderboardFragment extends Fragment {
                              Bundle savedInstanceState) {
         binding = FragmentLeaderboardBinding.inflate(inflater);
         binding.btBack.setOnClickListener(v -> Navigation.findNavController(binding.getRoot()).popBackStack());
-        adapter = new UserAdapter(authorizedUser, (latLng) -> {
+        userClickListener = latLng -> {
             if(latLng.latitude != 0.0 || latLng.longitude != 0.0) {
                 sharedViewModel.setCameraLocation(latLng);
                 Navigation.findNavController(binding.getRoot()).navigateUp();
+            }else{
+                Toast.makeText(requireContext(), "У пользователя нет рисунков", Toast.LENGTH_LONG).show();
             }
-        });
+        };
+        adapter = new UserAdapter(authorizedUser, userClickListener);
         binding.recycler.setAdapter(adapter);
         binding.refreshLayout.setOnRefreshListener(viewModel::load);
         viewModel.load();
@@ -82,6 +88,7 @@ public class LeaderboardFragment extends Fragment {
     private void renderLeaderboard(List<User> leaderboard){
         binding.tvNickname.setText("@" + leaderboard.get(0).getNickname());
         binding.tvPoints.setText(LeaderboardUtils.format(leaderboard.get(0).getScore()) + " м2");
+        binding.firstPlace.setOnClickListener(v -> userClickListener.onClick(new LatLng(leaderboard.get(0).getLatitude(), leaderboard.get(0).getLongitude())));
         leaderboard.remove(0);
         adapter.setUserList(leaderboard);
     }
