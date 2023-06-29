@@ -1,7 +1,6 @@
 package com.samsung.samsungproject.data.db.dao.shape;
 
 import com.samsung.samsungproject.domain.model.Shape;
-import com.samsung.samsungproject.domain.model.User;
 
 import java.util.List;
 

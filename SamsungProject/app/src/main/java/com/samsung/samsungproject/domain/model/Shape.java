@@ -6,8 +6,8 @@ import java.util.List;
 
 public class Shape {
     private User user;
-    private int color;
-    private List<Point> pointList;
+    private final int color;
+    private final List<Point> pointList;
 
     public Shape(User user, List<Point> pointList, int color) {
         this.user = user;

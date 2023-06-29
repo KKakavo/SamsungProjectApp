@@ -1,12 +1,9 @@
 package com.samsung.samsungproject.feature.registration.ui;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,17 +15,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.samsung.samsungproject.R;
-import com.samsung.samsungproject.data.api.RetrofitService;
-import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentRegistrationBinding;
 import com.samsung.samsungproject.domain.model.User;
-import com.samsung.samsungproject.feature.leaderboard.presentation.LeaderboardViewModel;
 import com.samsung.samsungproject.feature.registration.presentation.RegistrationStatus;
 import com.samsung.samsungproject.feature.registration.presentation.RegistrationViewModel;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 
 public class RegistrationFragment extends Fragment {

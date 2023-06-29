@@ -39,6 +39,10 @@ public class UserDaoSqlite implements UserDao {
                 AppReaderContract.UserEntry.COLUMN_ROLE, user.getRole());
         contentValues.put(
                 AppReaderContract.UserEntry.COLUMN_SCORE, user.getScore());
+        contentValues.put(
+                AppReaderContract.UserEntry.COLUMN_LATITUDE, user.getLatitude());
+        contentValues.put(
+                AppReaderContract.UserEntry.COLUMN_LONGITUDE, user.getLongitude());
         long index = database.insert(
                 AppReaderContract.UserEntry.TABLE_NAME,
                 null,
@@ -73,6 +77,8 @@ public class UserDaoSqlite implements UserDao {
             int password = cursor.getColumnIndex(AppReaderContract.UserEntry.COLUMN_PASSWORD);
             int role = cursor.getColumnIndex(AppReaderContract.UserEntry.COLUMN_ROLE);
             int score = cursor.getColumnIndex(AppReaderContract.UserEntry.COLUMN_SCORE);
+            int latitude = cursor.getColumnIndex(AppReaderContract.UserEntry.COLUMN_LATITUDE);
+            int longitude = cursor.getColumnIndex(AppReaderContract.UserEntry.COLUMN_LONGITUDE);
 
             do {
                 User user = new User(
@@ -81,7 +87,9 @@ public class UserDaoSqlite implements UserDao {
                         cursor.getString(nickname),
                         cursor.getString(password),
                         cursor.getString(role),
-                        cursor.getInt(score)
+                        cursor.getInt(score),
+                        cursor.getDouble(latitude),
+                        cursor.getDouble(longitude)
                 );
                 userList.add(user);
             } while (cursor.moveToNext());
@@ -111,13 +119,17 @@ public class UserDaoSqlite implements UserDao {
             int password = cursor.getColumnIndex(AppReaderContract.UserEntry.COLUMN_PASSWORD);
             int role = cursor.getColumnIndex(AppReaderContract.UserEntry.COLUMN_ROLE);
             int score = cursor.getColumnIndex(AppReaderContract.UserEntry.COLUMN_SCORE);
+            int latitude = cursor.getColumnIndex(AppReaderContract.UserEntry.COLUMN_LATITUDE);
+            int longitude = cursor.getColumnIndex(AppReaderContract.UserEntry.COLUMN_LONGITUDE);
             user = new User(
                     cursor.getLong(ID),
                     cursor.getString(email),
                     cursor.getString(nickname),
                     cursor.getString(password),
                     cursor.getString(role),
-                    cursor.getInt(score)
+                    cursor.getInt(score),
+                    cursor.getDouble(latitude),
+                    cursor.getDouble(longitude)
             );
         }
         cursor.close();

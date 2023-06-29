@@ -23,7 +23,9 @@ public class AppDbOpenHelper extends SQLiteOpenHelper {
                         AppReaderContract.UserEntry.COLUMN_EMAIL + " TEXT NOT NULL, " +
                         AppReaderContract.UserEntry.COLUMN_PASSWORD + " TEXT NOT NULL, " +
                         AppReaderContract.UserEntry.COLUMN_ROLE + " TEXT NOT NULL, " +
-                        AppReaderContract.UserEntry.COLUMN_SCORE + " INTEGER NOT NULL );"
+                        AppReaderContract.UserEntry.COLUMN_SCORE + " INTEGER NOT NULL, " +
+                        AppReaderContract.UserEntry.COLUMN_LATITUDE + " REAL, " +
+                        AppReaderContract.UserEntry.COLUMN_LONGITUDE + " REAL );"
         );
         db.execSQL(
                 "CREATE TABLE IF NOT EXISTS " + AppReaderContract.ShapeEntry.TABLE_NAME + " (" +

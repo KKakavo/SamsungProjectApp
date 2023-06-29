@@ -1,31 +1,28 @@
 package com.samsung.samsungproject.feature.leaderboard.ui.recycler;
 
-import android.annotation.SuppressLint;
-import android.content.res.ColorStateList;
-import android.content.res.Resources;
-import android.graphics.Color;
+import android.content.res.Resources.Theme;
+import android.graphics.Typeface;
 import android.util.TypedValue;
-import android.view.View;
 
-import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.samsung.samsungproject.R;
 import com.samsung.samsungproject.databinding.LeaderboardItemBinding;
 import com.samsung.samsungproject.domain.model.User;
 import com.samsung.samsungproject.feature.leaderboard.presentation.LeaderboardUtils;
 
-import android.content.res.Resources.Theme;
-
 public class UserViewHolder extends RecyclerView.ViewHolder {
     private final LeaderboardItemBinding binding;
-    private User authorizedUser;
+    private final User authorizedUser;
+    private final UserClickListener clickListener;
 
-    public UserViewHolder(LeaderboardItemBinding binding, User authorizedUser) {
+    public UserViewHolder(LeaderboardItemBinding binding, User authorizedUser, UserClickListener clickListener) {
         super(binding.getRoot());
         this.binding = binding;
         this.authorizedUser = authorizedUser;
+        this.clickListener = clickListener;
     }
 
     public void bind(User user, int position) {
@@ -33,6 +30,7 @@ public class UserViewHolder extends RecyclerView.ViewHolder {
         binding.tvPlace.setText(String.valueOf(position + 2));
         binding.tvNickname.setText("@" + user.getNickname());
         binding.tvScore.setText(LeaderboardUtils.format(user.getScore()) + " м2");
+        binding.getRoot().setOnClickListener(v -> clickListener.onClick(new LatLng(user.getLatitude(), user.getLongitude())));
         TypedValue typedValue = new TypedValue();
         if (user.getEmail().equals(authorizedUser.getEmail())) {
             theme.resolveAttribute(com.google.android.material.R.attr.colorAccent, typedValue, true);
@@ -46,16 +44,23 @@ public class UserViewHolder extends RecyclerView.ViewHolder {
             case 0:
                 binding.tvPlace.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.gray_BD));
                 binding.tvNickname.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.gray_BD));
+                binding.tvNickname.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                binding.tvNickname.setTextSize(16);
+
                 break;
             case 1:
                 binding.tvPlace.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.orange));
                 binding.tvNickname.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.orange));
+                binding.tvNickname.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                binding.tvNickname.setTextSize(15);
                 break;
             default:
                 TypedValue color = new TypedValue();
                 theme.resolveAttribute(com.google.android.material.R.attr.colorOnPrimary, color, true);
                 binding.tvPlace.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), color.resourceId));
                 binding.tvNickname.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), color.resourceId));
+                binding.tvNickname.setTextSize(14);
+                binding.tvNickname.setTypeface(Typeface.DEFAULT, Typeface.NORMAL);
                 break;
         }
     }

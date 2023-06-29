@@ -1,17 +1,11 @@
 package com.samsung.samsungproject.data.repository;
 
-import android.app.Application;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolygonOptions;
-import com.google.maps.android.PolyUtil;
 import com.google.maps.android.SphericalUtil;
 import com.samsung.samsungproject.data.api.shape.ShapeApi;
 import com.samsung.samsungproject.data.api.shape.ShapeApiService;
@@ -30,11 +24,10 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import retrofit2.Call;
 import retrofit2.Response;
 
 public class ShapeRepository {
-    private long controlSum;
+    private long controlSum = 0;
     private final ShapeApi api;
     private final ShapeDao dao;
     private final Executor executor;
@@ -64,7 +57,7 @@ public class ShapeRepository {
                     if (response.isSuccessful()) {
                         List<Shape> body = response.body();
                         dao.insertAll(body);
-                        controlSum += body.size();
+                        controlSum = dao.getSize();
                         handler.post(() -> callback.onComplete(new Result.Success<>(
                                 body.stream().map(MapUtils::shapeToPolygon).collect(Collectors.toList()))));
                     } else
@@ -87,7 +80,8 @@ public class ShapeRepository {
                 Response<List<Shape>> response = api.getRecentShapes(dao.getSize(), controlSum).execute();
                 if(response.isSuccessful()){
                     List<Shape> body = response.body();
-                    controlSum+= body.size();
+                    dao.insertAll(body);
+                    controlSum = dao.getSize();
                     handler.post(() -> callback.onComplete(new Result.Success<>(
                             body.stream().map(MapUtils::shapeToPolygon).collect(Collectors.toList()))));
                 } else throw new IOException("http code: " + response.code() + " in method getRecentShapes");
@@ -102,7 +96,7 @@ public class ShapeRepository {
     public void getAllPolygons(RepositoryCallback<List<User>> callback){
         executor.execute(() -> {
             List<Shape> shapeList = dao.findAll();
-            controlSum += shapeList.size();
+            controlSum = dao.getSize();
             handler.post(() -> callback.onComplete(new Result.Success<>(
                     shapeList.stream().map(MapUtils::shapeToPolygon).collect(Collectors.toList()))));
         });

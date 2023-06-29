@@ -8,10 +8,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.samsung.samsungproject.data.repository.UserRepository;
-import com.samsung.samsungproject.data.repository.communication.RepositoryCallback;
 import com.samsung.samsungproject.data.repository.communication.Result;
 import com.samsung.samsungproject.domain.model.User;
-import com.samsung.samsungproject.exception.UserAlreadyExistsException;
 
 import java.io.IOException;
 

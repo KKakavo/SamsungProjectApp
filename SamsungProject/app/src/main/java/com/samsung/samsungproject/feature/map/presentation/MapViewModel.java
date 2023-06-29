@@ -20,7 +20,6 @@ import com.google.android.gms.location.Priority;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.samsung.samsungproject.data.repository.ShapeRepository;
-import com.samsung.samsungproject.data.repository.communication.RepositoryCallback;
 import com.samsung.samsungproject.data.repository.communication.Result;
 import com.samsung.samsungproject.domain.model.User;
 
@@ -28,24 +27,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MapViewModel extends AndroidViewModel {
-    private MutableLiveData<LatLng> _location = new MutableLiveData<>();
+    private final MutableLiveData<LatLng> _location = new MutableLiveData<>();
     public LiveData<LatLng> location = _location;
-    private MutableLiveData<List<PolygonOptions>> _cachedPolygonList = new MutableLiveData<>();
+    private final MutableLiveData<List<PolygonOptions>> _cachedPolygonList = new MutableLiveData<>();
     public LiveData<List<PolygonOptions>> cachedPolygonList = _cachedPolygonList;
-    private MutableLiveData<List<LatLng>> _currentPathPoints = new MutableLiveData<>();
+    private final MutableLiveData<List<LatLng>> _currentPathPoints = new MutableLiveData<>();
     public LiveData<List<LatLng>> currentPathPoints = _currentPathPoints;
-    private MutableLiveData<List<LatLng>> _newPolygonPoints = new MutableLiveData<>();
+    private final MutableLiveData<List<LatLng>> _newPolygonPoints = new MutableLiveData<>();
     public LiveData<List<LatLng>> newPolygonPoints = _newPolygonPoints;
     public List<PolygonOptions> polygonOptionsList = new ArrayList<>();
-    private MutableLiveData<MapStatus> _status = new MutableLiveData<>();
+    private final MutableLiveData<MapStatus> _status = new MutableLiveData<>();
     public LiveData<MapStatus> status = _status;
     private final LocationCallback drawingLocationCallback;
     private final LocationCallback cameraLocationCallback;
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private LocationRequest locationRequest;
+    private final FusedLocationProviderClient fusedLocationProviderClient;
+    private final LocationRequest locationRequest;
     private final String LOG_TAG = "MapViewModel";
-
-    private ShapeRepository repository;
+    private final ShapeRepository repository;
+    public boolean isLocationCheckChange = false;
     public MapViewModel(@NonNull Application application) {
         super(application);
         repository = new ShapeRepository(application);
@@ -92,7 +91,7 @@ public class MapViewModel extends AndroidViewModel {
             }
         };
     }
-    public void getRecentPolygons(){
+    public void     getRecentPolygons(){
         repository.getRecentPolygons(result -> {
             if (result instanceof Result.Success){
                 List<PolygonOptions> data = ((Result.Success<List<PolygonOptions>>) result).data;
@@ -140,6 +139,10 @@ public class MapViewModel extends AndroidViewModel {
     }
     public void disableDrawing(){
         fusedLocationProviderClient.removeLocationUpdates(drawingLocationCallback);
+    }
+    public void setCameraLocation(LatLng latLng){
+        _location.setValue(latLng);
+        isLocationCheckChange = true;
     }
 
 }

@@ -17,16 +17,18 @@ import java.util.List;
 public class UserAdapter extends RecyclerView.Adapter<UserViewHolder> {
 
     private List<User> userList= new ArrayList<>();
-    private User authorizerUser;
-    public UserAdapter(User authorizerUser) {
+    private final User authorizerUser;
+    private final UserClickListener clickListener;
+    public UserAdapter(User authorizerUser, UserClickListener clickListener) {
         this.authorizerUser = authorizerUser;
+        this.clickListener = clickListener;
     }
 
     @NonNull
     @Override
     public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LeaderboardItemBinding binding = LeaderboardItemBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new UserViewHolder(binding, authorizerUser);
+        return new UserViewHolder(binding, authorizerUser, clickListener);
     }
 
     @Override

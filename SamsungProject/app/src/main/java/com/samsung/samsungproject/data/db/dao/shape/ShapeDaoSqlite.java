@@ -6,12 +6,10 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.samsung.samsungproject.data.db.dao.point.PointDao;
-import com.samsung.samsungproject.data.db.dao.point.PointDaoSqlite;
 import com.samsung.samsungproject.data.db.AppDbOpenHelper;
 import com.samsung.samsungproject.data.db.AppReaderContract;
-import com.samsung.samsungproject.data.db.dao.user.UserDao;
-import com.samsung.samsungproject.data.db.dao.user.UserDaoSqlite;
+import com.samsung.samsungproject.data.db.dao.point.PointDao;
+import com.samsung.samsungproject.data.db.dao.point.PointDaoSqlite;
 import com.samsung.samsungproject.domain.model.Shape;
 
 import java.util.ArrayList;

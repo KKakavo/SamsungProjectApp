@@ -1,7 +1,6 @@
 package com.samsung.samsungproject.data.repository;
 
 import android.app.Application;
-import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -21,7 +20,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import retrofit2.Call;
 import retrofit2.Response;
 
 public class UserRepository {

@@ -2,38 +2,31 @@ package com.samsung.samsungproject.feature.map.ui;
 
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.Granularity;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -47,34 +40,29 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
 import com.google.maps.android.PolyUtil;
-import com.google.maps.android.SphericalUtil;
 import com.samsung.samsungproject.R;
-import com.samsung.samsungproject.data.repository.ShapeRepository;
 import com.samsung.samsungproject.databinding.FragmentMapBinding;
-import com.samsung.samsungproject.data.db.dao.shape.ShapeDao;
-import com.samsung.samsungproject.data.db.dao.shape.ShapeDaoSqlite;
-import com.samsung.samsungproject.domain.model.Shape;
 import com.samsung.samsungproject.domain.model.User;
+import com.samsung.samsungproject.feature.map.presentation.LaunchCheck;
 import com.samsung.samsungproject.feature.map.presentation.MapStatus;
-import com.samsung.samsungproject.feature.map.presentation.MapUtils;
 import com.samsung.samsungproject.feature.map.presentation.MapViewModel;
 import com.samsung.samsungproject.feature.map.ui.spinner.ColorAdapter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private FragmentMapBinding binding;
+    private LaunchCheck launchCheck;
     private MapViewModel viewModel;
     Resources.Theme theme;
     private GoogleMap googleMap;
-    private List<Polygon> drawedPolygonList = new ArrayList<>();
+    private final List<Polygon> drawedPolygonList = new ArrayList<>();
     private final Handler handler = new Handler();
     private final String LOG_TAG = "MapFragment";
+    private final String LOCAITON_KEY = "location";
     private User authorizedUser;
     private float zIndex = 0;
     private final Integer[] spinner_items = {R.color.red_EB, R.color.orange, R.color.yellow,
@@ -87,14 +75,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         super.onCreate(savedInstanceState);
         MapFragmentArgs args = MapFragmentArgs.fromBundle(requireArguments());
         authorizedUser = args.getUser();
-        viewModel = new ViewModelProvider(this).get(MapViewModel.class);
-        viewModel.location.observe(this, this::renderCamera);
+        viewModel = new ViewModelProvider(requireActivity()).get(MapViewModel.class);
         viewModel.cachedPolygonList.observe(this, this::renderCachedPolygon);
         viewModel.currentPathPoints.observe(this, this::renderCurrentPath);
         viewModel.newPolygonPoints.observe(this, this::renderNewPolygon);
         viewModel.status.observe(this, this::renderStatus);
+        viewModel.location.observe(this, this::renderCamera);
+        launchCheck = new LaunchCheck(requireContext());
         if (!isLocationPermissionGranted())
             launchLocationPermissionRequest();
+
     }
 
 
@@ -103,6 +93,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                              Bundle savedInstanceState) {
         binding = FragmentMapBinding.inflate(inflater);
         theme = binding.getRoot().getContext().getTheme();
+        if(launchCheck.isFirstTimeLaunch()){
+            startDialogWindow();
+        }
         SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.fr_google_map);
         supportMapFragment.getMapAsync(this);
@@ -110,8 +103,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         binding.btLeaderboard.setOnClickListener(v -> Navigation.findNavController(binding.getRoot())
                 .navigate(MapFragmentDirections.actionMapFragmentToLeaderboardFragment(authorizedUser)));
         binding.btMyLocation.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
             if (isGeoEnabled()) {
-                if (isChecked) viewModel.enableCamera();
+                if(viewModel.isLocationCheckChange){
+                    viewModel.isLocationCheckChange = false;
+                    binding.btMyLocation.setChecked(false);
+                    viewModel.disableCamera();
+                }
+                else if (isChecked) viewModel.enableCamera();
                 else viewModel.disableCamera();
             } else {
                 startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
@@ -145,17 +144,38 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         super.onDestroy();
         binding = null;
         handler.removeCallbacksAndMessages(null);
+        viewModel.disableCamera();
+        viewModel.disableDrawing();
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(viewModel.location.getValue() != null) {
+            SharedPreferences.Editor editor = requireActivity().getPreferences(Context.MODE_PRIVATE).edit();
+            editor.putString(LOCAITON_KEY, viewModel.location.getValue().latitude + " " + viewModel.location.getValue().longitude);
+            editor.apply();
+        }
     }
 
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
+        viewModel.getAllPolygons();
         googleMap.getUiSettings().setMyLocationButtonEnabled(false);
+        SharedPreferences reader = requireActivity().getPreferences(Context.MODE_PRIVATE);
+        String loc = reader.getString(LOCAITON_KEY, null);
+        if(loc != null && currentPath == null){
+            String[] buf = loc.split(" ");
+            System.out.println(loc);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(new LatLng(Double.parseDouble(buf[0]), Double.parseDouble(buf[1])), 17);
+            googleMap.moveCamera(cameraUpdate);
+        }
         if (isLocationPermissionGranted())
             enableMyLocation();
         if (currentPath == null) {
             currentPath = googleMap.addPolyline(new PolylineOptions().width(0));
-            viewModel.getAllPolygons();
         }
         googleMap.setMapStyle(
                 MapStyleOptions.loadRawResourceStyle(
@@ -208,7 +228,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private void renderCamera(LatLng latLng) {
         if(googleMap != null) {
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 18);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 17);
             googleMap.animateCamera(cameraUpdate);
         }
     }
@@ -263,8 +283,24 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             viewModel.polygonOptionsList.add(polygonOptions);
         }
     }
-
-    @Override
+    private void startDialogWindow(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+        builder.setMessage(R.string.dialog_message);
+        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                launchCheck.setFirstTimeLaunch(false);
+            }
+        });
+        AlertDialog dialog = builder.create();
+        TypedValue typedValue = new TypedValue();
+        theme.resolveAttribute(com.google.android.material.R.attr.colorOnPrimary, typedValue, true);
+        dialog.show();
+        Button button = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+        if(button != null)
+            button.setTextColor(typedValue.data);
+    }
+    /*@Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean("isLocationEnabled", binding.btMyLocation.isChecked());
@@ -276,7 +312,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         super.onViewStateRestored(savedInstanceState);
         if (savedInstanceState != null) {
             binding.btStart.setChecked(savedInstanceState.getBoolean("isDrawEnabled"));
-            binding.btMyLocation.setChecked(savedInstanceState.getBoolean("isLocationEnabled"));
+            if(!viewModel.isLocationCheckChange)
+                binding.btMyLocation.setChecked(savedInstanceState.getBoolean("isLocationEnabled"));
+            else {
+                viewModel.isLocationCheckChange = false;
+                binding.btMyLocation.setChecked(false);
+            }
         }
-    }
+    }*/
 }

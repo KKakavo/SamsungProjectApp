@@ -23,6 +23,8 @@ public class AppReaderContract {
         public static final String COLUMN_PASSWORD = "password";
         public static final String COLUMN_SCORE = "score";
         public static final String COLUMN_ROLE = "role";
+        public static final String COLUMN_LATITUDE = "latitude";
+        public static final String COLUMN_LONGITUDE = "longitude";
 
 
     }

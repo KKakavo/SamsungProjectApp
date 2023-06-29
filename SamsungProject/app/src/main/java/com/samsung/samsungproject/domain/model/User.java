@@ -20,6 +20,8 @@ public class User implements Serializable {
 
     private final String role;
     private final long score;
+    private double latitude;
+    private double longitude;
 
     private final static String EMAIL_KEY = "EMAIL_KEY";
     private final static String PASSWORD_KEY = "PASSWORD_KEY";
@@ -33,8 +35,22 @@ public class User implements Serializable {
         this.score = score;
     }
 
+    public User(long id, String email, String nickname, String password, String role, long score, double latitude, double longitude) {
+        this.id = id;
+        this.email = email;
+        this.nickname = nickname;
+        this.password = password;
+        this.role = role;
+        this.score = score;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
     public static String getEmailFromPreferences(FragmentActivity activity){
         return activity.getPreferences(Context.MODE_PRIVATE).getString(EMAIL_KEY, null);
+    }
+    public static String getPasswordFromPreferences(FragmentActivity activity){
+        return activity.getPreferences(Context.MODE_PRIVATE).getString(PASSWORD_KEY, null);
     }
     public static void saveUserToPreferences(FragmentActivity activity, String email, String password){
         SharedPreferences.Editor editor = activity.getPreferences(Context.MODE_PRIVATE).edit();
@@ -64,6 +80,21 @@ public class User implements Serializable {
     public long getScore() {
         return score;
     }
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
 
     @Override
     public String toString() {

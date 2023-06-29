@@ -1,19 +1,13 @@
 package com.samsung.samsungproject.feature.login.ui;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -21,19 +15,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.samsung.samsungproject.R;
-import com.samsung.samsungproject.data.api.RetrofitService;
-import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentLoginBinding;
 import com.samsung.samsungproject.domain.model.User;
 import com.samsung.samsungproject.feature.login.presentation.LoginStatus;
 import com.samsung.samsungproject.feature.login.presentation.LoginViewModel;
-
-import java.util.List;
-
-import at.favre.lib.crypto.bcrypt.BCrypt;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class LoginFragment extends Fragment {
 
@@ -92,14 +77,16 @@ public class LoginFragment extends Fragment {
         binding.logEtPassword.addTextChangedListener(textWatcher);
         if(savedInstanceState == null){
             String email = User.getEmailFromPreferences(requireActivity());
-            if(email != null)
+            String password = User.getPasswordFromPreferences(requireActivity());
+            if(email != null) {
                 binding.logEtEmail.setText(email);
+                if(password != null){
+                    viewModel.sharedPreferencesLogin(email, password);
+                }
+            }
         }
         binding.logAcbEnter.setOnClickListener(v -> {
-            binding.logEtEmail.setEnabled(false);
-            binding.logEtPassword.setEnabled(false);
-            binding.logAcbEnter.setEnabled(false);
-            binding.logTvRegistration.setEnabled(false);
+            disableScreen();
             viewModel.login(binding.logEtEmail.getText().toString(),
                     binding.logEtPassword.getText().toString());
         });
@@ -125,28 +112,19 @@ public class LoginFragment extends Fragment {
                 binding.tvError.setText(R.string.server_not_responding);
                 binding.tvError.setVisibility(View.VISIBLE);
                 binding.progressBar.setVisibility(View.INVISIBLE);
-                binding.logEtEmail.setEnabled(true);
-                binding.logEtPassword.setEnabled(true);
-                binding.logAcbEnter.setEnabled(true);
-                binding.logTvRegistration.setEnabled(true);
+                enableScreen();
                 break;
             case WRONG_EMAIL:
                 binding.tvError.setText(R.string.wrong_email);
                 binding.tvError.setVisibility(View.VISIBLE);
                 binding.progressBar.setVisibility(View.INVISIBLE);
-                binding.logEtEmail.setEnabled(true);
-                binding.logEtPassword.setEnabled(true);
-                binding.logAcbEnter.setEnabled(true);
-                binding.logTvRegistration.setEnabled(true);
+                enableScreen();
                 break;
             case WRONG_PASSWORD:
                 binding.tvError.setText(R.string.wrong_password);
                 binding.tvError.setVisibility(View.VISIBLE);
                 binding.progressBar.setVisibility(View.INVISIBLE);
-                binding.logEtEmail.setEnabled(true);
-                binding.logEtPassword.setEnabled(true);
-                binding.logAcbEnter.setEnabled(true);
-                binding.logTvRegistration.setEnabled(true);
+                enableScreen();
                 break;
         }
     }
@@ -154,5 +132,17 @@ public class LoginFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         binding = null;
+    }
+    private void disableScreen(){
+        binding.logEtEmail.setEnabled(false);
+        binding.logEtPassword.setEnabled(false);
+        binding.logAcbEnter.setEnabled(false);
+        binding.logTvRegistration.setEnabled(false);
+    }
+    private void enableScreen(){
+        binding.logEtEmail.setEnabled(true);
+        binding.logEtPassword.setEnabled(true);
+        binding.logAcbEnter.setEnabled(true);
+        binding.logTvRegistration.setEnabled(true);
     }
 }

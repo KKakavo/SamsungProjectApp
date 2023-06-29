@@ -1,24 +1,17 @@
 package com.samsung.samsungproject.feature.map.ui.spinner;
 
 import android.content.Context;
-import android.database.DataSetObserver;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.SpinnerAdapter;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
-import com.samsung.samsungproject.R;
 import com.samsung.samsungproject.databinding.SpinnerItemBinding;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 

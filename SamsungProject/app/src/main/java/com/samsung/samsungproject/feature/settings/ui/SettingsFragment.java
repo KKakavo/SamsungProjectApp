@@ -1,15 +1,13 @@
 package com.samsung.samsungproject.feature.settings.ui;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-import androidx.navigation.Navigation;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.samsung.samsungproject.R;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
+
 import com.samsung.samsungproject.databinding.FragmentSettingsBinding;
 import com.samsung.samsungproject.domain.model.User;
 

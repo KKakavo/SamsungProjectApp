@@ -11,22 +11,15 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.samsung.samsungproject.R;
-import com.samsung.samsungproject.data.repository.UserRepository;
 import com.samsung.samsungproject.databinding.FragmentLeaderboardBinding;
-import com.samsung.samsungproject.data.db.dao.user.UserDao;
-import com.samsung.samsungproject.data.db.dao.user.UserDaoSqlite;
 import com.samsung.samsungproject.domain.model.User;
 import com.samsung.samsungproject.feature.leaderboard.presentation.LeaderboardStatus;
 import com.samsung.samsungproject.feature.leaderboard.presentation.LeaderboardUtils;
 import com.samsung.samsungproject.feature.leaderboard.presentation.LeaderboardViewModel;
 import com.samsung.samsungproject.feature.leaderboard.ui.recycler.UserAdapter;
+import com.samsung.samsungproject.feature.map.presentation.MapViewModel;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 
 public class LeaderboardFragment extends Fragment {
@@ -34,6 +27,7 @@ public class LeaderboardFragment extends Fragment {
     private FragmentLeaderboardBinding binding;
     private UserAdapter adapter;
     private LeaderboardViewModel viewModel;
+    private MapViewModel sharedViewModel;
     private User authorizedUser;
     private LeaderboardFragmentArgs args;
 
@@ -43,6 +37,7 @@ public class LeaderboardFragment extends Fragment {
         args = LeaderboardFragmentArgs.fromBundle(requireArguments());
         authorizedUser = args.getUser();
         viewModel = new ViewModelProvider(this).get(LeaderboardViewModel.class);
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(MapViewModel.class);
         viewModel.leaderboard.observe(this, this::renderLeaderboard);
         viewModel.status.observe(this, this::renderStatus);
     }
@@ -52,7 +47,12 @@ public class LeaderboardFragment extends Fragment {
                              Bundle savedInstanceState) {
         binding = FragmentLeaderboardBinding.inflate(inflater);
         binding.btBack.setOnClickListener(v -> Navigation.findNavController(binding.getRoot()).popBackStack());
-        adapter = new UserAdapter(authorizedUser);
+        adapter = new UserAdapter(authorizedUser, (latLng) -> {
+            if(latLng.latitude != 0.0 || latLng.longitude != 0.0) {
+                sharedViewModel.setCameraLocation(latLng);
+                Navigation.findNavController(binding.getRoot()).navigateUp();
+            }
+        });
         binding.recycler.setAdapter(adapter);
         binding.refreshLayout.setOnRefreshListener(viewModel::load);
         viewModel.load();

@@ -6,20 +6,12 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
-import com.samsung.samsungproject.data.db.dao.user.UserDao;
-import com.samsung.samsungproject.data.db.dao.user.UserDaoSqlite;
 import com.samsung.samsungproject.data.repository.UserRepository;
-import com.samsung.samsungproject.data.repository.communication.RepositoryCallback;
 import com.samsung.samsungproject.data.repository.communication.Result;
 import com.samsung.samsungproject.domain.model.User;
 
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class LeaderboardViewModel extends AndroidViewModel {
     private final MutableLiveData<List<User>> _leaderboard = new MutableLiveData<>();

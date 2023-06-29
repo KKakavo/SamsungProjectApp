@@ -21,4 +21,6 @@
     <string name="settings">Настройки</string>
     <string name="application_theme">Тема приложения</string>
     <string name="exit_account">Выйти из аккаунта</string>
+    <string name="dialog_message">Приложение исользует данные о вашем местоположении, чтобы определять геолокацию вашего телефона. Для корректной работы приложения необходимо выйти из закрытого помещения.</string>
+    <string name="ok">Окей</string>
 </resources>
